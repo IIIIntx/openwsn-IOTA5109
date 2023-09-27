@@ -39,7 +39,7 @@ void board_init(void) {
     // start hfclock
     NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
     NRF_CLOCK->TASKS_HFCLKSTART    = 1;
-    while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0);
+    while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0); //wait for crystal
 
     leds_init();
     debugpins_init();
