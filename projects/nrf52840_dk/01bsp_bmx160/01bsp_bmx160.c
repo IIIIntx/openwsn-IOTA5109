@@ -112,7 +112,7 @@ int mote_main(void) {
         // wait for timer to elapse
         while (app_vars.uartSendNow==0);
         app_vars.uartSendNow = 0;
-
+        bmx160_set_cmd(BMX160_CMD_PMU_GYR_NORMAL);
         bmx160_read_9dof_data();
 
         i=0;

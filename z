@@ -1,0 +1,79 @@
+[1mdiff --git a/projects/common/01bsp_leds/01bsp_leds.c b/projects/common/01bsp_leds/01bsp_leds.c[m
+[1mindex 1e8ce4e3..9ed9e761 100644[m
+[1m--- a/projects/common/01bsp_leds/01bsp_leds.c[m
+[1m+++ b/projects/common/01bsp_leds/01bsp_leds.c[m
+[36m@@ -11,10 +11,13 @@[m [mLoad this program on your boards. The LEDs should start blinking furiously.[m
+ */[m
+ [m
+ #include "stdint.h"[m
+[31m-#include "stdio.h"[m
+[31m-// bsp modules required[m
+[32m+[m[32m#include "string.h"[m[41m[m
+ #include "board.h"[m
+[32m+[m[32m#include "debugpins.h"[m[41m[m
+ #include "leds.h"[m
+[32m+[m[32m#include "sctimer.h"[m[41m[m
+[32m+[m[41m[m
+[32m+[m[32m#define SCTIMER_PERIOD     32768 // @32kHz = 1s[m[41m[m
+ [m
+ void some_delay(void);[m
+ [m
+[36m@@ -24,14 +27,25 @@[m [mvoid some_delay(void);[m
+ int mote_main(void) {uint8_t i;[m
+    [m
+    board_init();[m
+[32m+[m[41m[m
+    leds_all_off();[m
+[31m-   while(1)[m
+[31m-   {[m
+[31m-     leds_error_on();          some_delay();       leds_error_off();  [m
+[31m-     leds_radio_on();          some_delay();       leds_radio_off();  [m
+[31m-     leds_sync_on();           some_delay();       leds_sync_off();  [m
+[31m-     leds_debug_on();          some_delay();       leds_debug_off();  [m
+[31m-   }[m
+[32m+[m[32m   /*********************************************************/[m[41m[m
+[32m+[m[32m   //while(1)[m[41m[m
+[32m+[m[32m   //{[m[41m[m
+[32m+[m[32m   //  leds_error_on();          some_delay();       leds_error_off();[m[41m  [m
+[32m+[m[32m   //  leds_radio_on();          some_delay();       leds_radio_off();[m[41m  [m
+[32m+[m[32m   //  leds_sync_on();           some_delay();       leds_sync_off();[m[41m  [m
+[32m+[m[32m   //  leds_debug_on();          some_delay();       leds_debug_off();[m[41m  [m
+[32m+[m[32m   //}[m[41m[m
+[32m+[m[32m   /*********************************************************/[m[41m[m
+[32m+[m[41m[m
+[32m+[m[32m   while(1){[m[41m[m
+[32m+[m[32m     leds_error_on();          some_delay1();       leds_error_off();[m[41m  [m
+[32m+[m[32m     leds_radio_on();          some_delay1();       leds_radio_off();[m[41m  [m
+[32m+[m[32m     leds_sync_on();           some_delay1();       leds_sync_off();[m[41m  [m
+[32m+[m[32m     leds_debug_on();          some_delay1();       leds_debug_off();[m[41m [m
+[32m+[m[32m     }[m[41m[m
+[32m+[m[41m[m
+    [m
+    //// error LED functions[m
+    //leds_error_on();          some_delay();[m
+[36m@@ -81,5 +95,21 @@[m [mint mote_main(void) {uint8_t i;[m
+ [m
+ void some_delay(void) {[m
+    volatile uint32_t delay;[m
+[31m-   for (delay=0x00ffffff;delay>0;delay--);[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m   for (delay=0x001fffff;delay>0;delay--);[m[41m[m
+[32m+[m[32m}[m[41m[m
+[32m+[m[41m[m
+[32m+[m[41m[m
+[32m+[m[32mvoid some_delay1(void) {[m[41m[m
+[32m+[m[32m   uint8_t timeflag = 0;[m[41m[m
+[32m+[m[32m   uint32_t counter_current;[m[41m[m
+[32m+[m[41m    [m
+[32m+[m[32m   counter_current = sctimer_readCounter();[m[41m[m
+[32m+[m[32m   while(1)[m[41m[m
+[32m+[m[32m   {[m[41m[m
+[32m+[m[32m       if(counter_current>=SCTIMER_PERIOD)[m[41m[m
+[32m+[m[32m       break;[m[41m[m
+[32m+[m[32m   }[m[41m[m
+[32m+[m[32m}[m[41m[m
+[41m+  [m
+[41m+   [m
+[41m+      [m
+\ No newline at end of file[m

@@ -1,0 +1,360 @@
+diff --git a/bsp/boards/nrf52840_dk/board.c b/bsp/boards/nrf52840_dk/board.c
+index af429299..04e9807b 100644
+--- a/bsp/boards/nrf52840_dk/board.c
++++ b/bsp/boards/nrf52840_dk/board.c
+@@ -39,7 +39,7 @@ void board_init(void) {
+     // start hfclock
+     NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
+     NRF_CLOCK->TASKS_HFCLKSTART    = 1;
+-    while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0);
++    while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0); //wait for crystal
+ 
+     leds_init();
+     debugpins_init();
+diff --git a/projects/common/01bsp_leds/01bsp_leds.c b/projects/common/01bsp_leds/01bsp_leds.c
+index c2151f82..9ed9e761 100644
+--- a/projects/common/01bsp_leds/01bsp_leds.c
++++ b/projects/common/01bsp_leds/01bsp_leds.c
+@@ -11,10 +11,13 @@ Load this program on your boards. The LEDs should start blinking furiously.
+ */
+ 
+ #include "stdint.h"
+-#include "stdio.h"
+-// bsp modules required
++#include "string.h"
+ #include "board.h"
++#include "debugpins.h"
+ #include "leds.h"
++#include "sctimer.h"
++
++#define SCTIMER_PERIOD     32768 // @32kHz = 1s
+ 
+ void some_delay(void);
+ 
+@@ -24,46 +27,65 @@ void some_delay(void);
+ int mote_main(void) {uint8_t i;
+    
+    board_init();
++
++   leds_all_off();
++   /*********************************************************/
++   //while(1)
++   //{
++   //  leds_error_on();          some_delay();       leds_error_off();  
++   //  leds_radio_on();          some_delay();       leds_radio_off();  
++   //  leds_sync_on();           some_delay();       leds_sync_off();  
++   //  leds_debug_on();          some_delay();       leds_debug_off();  
++   //}
++   /*********************************************************/
++
++   while(1){
++     leds_error_on();          some_delay1();       leds_error_off();  
++     leds_radio_on();          some_delay1();       leds_radio_off();  
++     leds_sync_on();           some_delay1();       leds_sync_off();  
++     leds_debug_on();          some_delay1();       leds_debug_off(); 
++     }
++
+    
+-   // error LED functions
+-   leds_error_on();          some_delay();
+-   leds_error_off();         some_delay();
+-   leds_error_toggle();      some_delay();
+-   leds_error_blink();       some_delay();
++   //// error LED functions
++   //leds_error_on();          some_delay();
++   //leds_error_off();         some_delay();
++   //leds_error_toggle();      some_delay();
++   //leds_error_blink();       some_delay();
+    
+-   // radio LED functions
+-   leds_radio_on();          some_delay();
+-   leds_radio_off();         some_delay();
+-   leds_radio_toggle();      some_delay();
++   //// radio LED functions
++   //leds_radio_on();          some_delay();
++   //leds_radio_off();         some_delay();
++   //leds_radio_toggle();      some_delay();
+    
+-   // sync LED functions
+-   leds_sync_on();           some_delay();
+-   leds_sync_off();          some_delay();
+-   leds_sync_toggle();       some_delay();
++   //// sync LED functions
++   //leds_sync_on();           some_delay();
++   //leds_sync_off();          some_delay();
++   //leds_sync_toggle();       some_delay();
+    
+-   // debug LED functions
+-   leds_debug_on();          some_delay();
+-   leds_debug_off();         some_delay();
+-   leds_debug_toggle();      some_delay();
++   //// debug LED functions
++   //leds_debug_on();          some_delay();
++   //leds_debug_off();         some_delay();
++   //leds_debug_toggle();      some_delay();
+    
+-   // all LED functions
+-   leds_all_off();           some_delay();
+-   leds_all_on();            some_delay();
+-   leds_all_off();           some_delay();
+-   leds_all_toggle();        some_delay();
++   //// all LED functions
++   //leds_all_off();           some_delay();
++   //leds_all_on();            some_delay();
++   //leds_all_off();           some_delay();
++   //leds_all_toggle();        some_delay();
+    
+-   // LED increment function
+-   leds_all_off();           some_delay();
+-   for (i=0;i<9;i++) {
+-      leds_increment();      some_delay();
+-   }
++   //// LED increment function
++   //leds_all_off();           some_delay();
++   //for (i=0;i<9;i++) {
++   //   leds_increment();      some_delay();
++   //}
+    
+-   // LED circular shift function
+-   leds_all_off();           some_delay();
+-   leds_error_on();          some_delay();
+-   for (i=0;i<9;i++) {
+-      leds_circular_shift(); some_delay();
+-   }
++   //// LED circular shift function
++   //leds_all_off();           some_delay();
++   //leds_error_on();          some_delay();
++   //for (i=0;i<9;i++) {
++   //   leds_circular_shift(); some_delay();
++   //}
+    
+    // reset the board, so the program starts running again
+    board_reset();
+@@ -72,6 +94,22 @@ int mote_main(void) {uint8_t i;
+ }
+ 
+ void some_delay(void) {
+-   volatile uint16_t delay;
+-   for (delay=0xffff;delay>0;delay--);
+-}
+\ No newline at end of file
++   volatile uint32_t delay;
++   for (delay=0x001fffff;delay>0;delay--);
++}
++
++
++void some_delay1(void) {
++   uint8_t timeflag = 0;
++   uint32_t counter_current;
++    
++   counter_current = sctimer_readCounter();
++   while(1)
++   {
++       if(counter_current>=SCTIMER_PERIOD)
++       break;
++   }
++}
++  
++   
++      
+\ No newline at end of file
+diff --git a/projects/nrf52840_dk/01bsp_leds_Debug.jlink b/projects/nrf52840_dk/01bsp_leds_Debug.jlink
+new file mode 100644
+index 00000000..35ce3010
+--- /dev/null
++++ b/projects/nrf52840_dk/01bsp_leds_Debug.jlink
+@@ -0,0 +1,44 @@
++[BREAKPOINTS]
++ForceImpTypeAny = 0
++ShowInfoWin = 1
++EnableFlashBP = 2
++BPDuringExecution = 0
++[CFI]
++CFISize = 0x00
++CFIAddr = 0x00
++[CPU]
++MonModeVTableAddr = 0xFFFFFFFF
++MonModeDebug = 0
++MaxNumAPs = 0
++LowPowerHandlingMode = 0
++OverrideMemMap = 0
++AllowSimulation = 1
++ScriptFile=""
++[FLASH]
++RMWThreshold = 0x400
++Loaders=""
++EraseType = 0x00
++CacheExcludeSize = 0x00
++CacheExcludeAddr = 0x00
++MinNumBytesFlashDL = 0
++SkipProgOnCRCMatch = 1
++VerifyDownload = 1
++AllowCaching = 1
++EnableFlashDL = 2
++Override = 0
++Device="ARM7"
++[GENERAL]
++WorkRAMSize = 0x00
++WorkRAMAddr = 0x00
++RAMUsageLimit = 0x00
++[SWO]
++SWOLogFile=""
++[MEM]
++RdOverrideOrMask = 0x00
++RdOverrideAndMask = 0xFFFFFFFF
++RdOverrideAddr = 0xFFFFFFFF
++WrOverrideOrMask = 0x00
++WrOverrideAndMask = 0xFFFFFFFF
++WrOverrideAddr = 0xFFFFFFFF
++[RAM]
++VerifyDownload = 0x01
+diff --git a/projects/nrf52840_dk/01bsp_sctimer_Debug.jlink b/projects/nrf52840_dk/01bsp_sctimer_Debug.jlink
+new file mode 100644
+index 00000000..35ce3010
+--- /dev/null
++++ b/projects/nrf52840_dk/01bsp_sctimer_Debug.jlink
+@@ -0,0 +1,44 @@
++[BREAKPOINTS]
++ForceImpTypeAny = 0
++ShowInfoWin = 1
++EnableFlashBP = 2
++BPDuringExecution = 0
++[CFI]
++CFISize = 0x00
++CFIAddr = 0x00
++[CPU]
++MonModeVTableAddr = 0xFFFFFFFF
++MonModeDebug = 0
++MaxNumAPs = 0
++LowPowerHandlingMode = 0
++OverrideMemMap = 0
++AllowSimulation = 1
++ScriptFile=""
++[FLASH]
++RMWThreshold = 0x400
++Loaders=""
++EraseType = 0x00
++CacheExcludeSize = 0x00
++CacheExcludeAddr = 0x00
++MinNumBytesFlashDL = 0
++SkipProgOnCRCMatch = 1
++VerifyDownload = 1
++AllowCaching = 1
++EnableFlashDL = 2
++Override = 0
++Device="ARM7"
++[GENERAL]
++WorkRAMSize = 0x00
++WorkRAMAddr = 0x00
++RAMUsageLimit = 0x00
++[SWO]
++SWOLogFile=""
++[MEM]
++RdOverrideOrMask = 0x00
++RdOverrideAndMask = 0xFFFFFFFF
++RdOverrideAddr = 0xFFFFFFFF
++WrOverrideOrMask = 0x00
++WrOverrideAndMask = 0xFFFFFFFF
++WrOverrideAddr = 0xFFFFFFFF
++[RAM]
++VerifyDownload = 0x01
+diff --git a/projects/nrf52840_dk/flash_placement.xml b/projects/nrf52840_dk/flash_placement.xml
+index b2d0b3a9..0241645d 100644
+--- a/projects/nrf52840_dk/flash_placement.xml
++++ b/projects/nrf52840_dk/flash_placement.xml
+@@ -4,7 +4,7 @@
+     <ProgramSection alignment="0x100" load="Yes" name=".vectors" start="$(FLASH_START)" />
+     <ProgramSection alignment="4" load="Yes" name=".init" />
+     <ProgramSection alignment="4" load="Yes" name=".init_rodata" />
+-    <ProgramSection alignment="4" load="Yes" name=".text" size="0x4" />
++    <ProgramSection alignment="4" load="Yes" name=".text" />
+     <ProgramSection alignment="4" keep="Yes" load="Yes" name=".log_const_data" inputsections="*(SORT(.log_const_data*))" address_symbol="__start_log_const_data" end_symbol="__stop_log_const_data" />
+     <ProgramSection alignment="4" keep="Yes" load="Yes" name=".log_backends" inputsections="*(SORT(.log_backends*))" address_symbol="__start_log_backends" end_symbol="__stop_log_backends" />
+     <ProgramSection alignment="4" keep="Yes" load="Yes" name=".nrf_balloc" inputsections="*(.nrf_balloc*)" address_symbol="__start_nrf_balloc" end_symbol="__stop_nrf_balloc" />
+@@ -13,7 +13,7 @@
+     <ProgramSection alignment="4" keep="Yes" load="Yes" name=".log_filter_data"  inputsections="*(SORT(.log_filter_data*))" runin=".log_filter_data_run"/>
+     <ProgramSection alignment="4" load="Yes" name=".dtors" />
+     <ProgramSection alignment="4" load="Yes" name=".ctors" />
+-    <ProgramSection alignment="4" load="Yes" name=".rodata" size="0x4" />
++    <ProgramSection alignment="4" load="Yes" name=".rodata" />
+     <ProgramSection alignment="4" load="Yes" name=".ARM.exidx" address_symbol="__exidx_start" end_symbol="__exidx_end" />
+     <ProgramSection alignment="4" load="Yes" runin=".fast_run" name=".fast" />
+     <ProgramSection alignment="4" load="Yes" runin=".data_run" name=".data" />
+diff --git a/projects/nrf52840_dk/nrf52840_dk.emSession b/projects/nrf52840_dk/nrf52840_dk.emSession
+new file mode 100644
+index 00000000..b8083ee0
+--- /dev/null
++++ b/projects/nrf52840_dk/nrf52840_dk.emSession
+@@ -0,0 +1,72 @@
++<!DOCTYPE CrossStudio_Session_File>
++<session>
++ <Bookmarks/>
++ <Breakpoints groups="Breakpoints" active_group="Breakpoints">
++  <BreakpointListItem trigger="" line="48" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../common/01bsp_sctimer/01bsp_sctimer.c" useHWbreakpoint="false"/>
++  <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
++ </Breakpoints>
++ <ExecutionProfileWindow/>
++ <FrameBuffer>
++  <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_leds_Debug" addressText="" accessByDisplayWidth="0"/>
++  <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_sctimer_Debug" addressText="" accessByDisplayWidth="0"/>
++ </FrameBuffer>
++ <Memory1>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
++ </Memory1>
++ <Memory2>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
++ </Memory2>
++ <Memory3>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
++ </Memory3>
++ <Memory4>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
++ </Memory4>
++ <Project>
++  <ProjectSessionItem path="nrf52840-dk"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;application"/>
++ </Project>
++ <Register1>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++ </Register1>
++ <Register2>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++ </Register2>
++ <Register3>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++ </Register3>
++ <Register4>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++ </Register4>
++ <Threads>
++  <ThreadsWindow showLists=""/>
++ </Threads>
++ <TraceWindow>
++  <Trace enabled="Yes"/>
++ </TraceWindow>
++ <Watch1>
++  <Watches active="1" update="Never"/>
++ </Watch1>
++ <Watch2>
++  <Watches active="0" update="Never"/>
++ </Watch2>
++ <Watch3>
++  <Watches active="0" update="Never"/>
++ </Watch3>
++ <Watch4>
++  <Watches active="0" update="Never"/>
++ </Watch4>
++ <Files>
++  <SessionOpenFile windowGroup="DockEditLeft" x="19" y="65" useTextEdit="1" path="../common/01bsp_uart/01bsp_uart.c" left="0" selected="1" top="44" codecName="Default"/>
++ </Files>
++ <EMStudioWindow activeProject="01bsp_sctimer" fileDialogDefaultFilter="*.emProject" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/nrf52840_dk" debugSearchPath="" autoConnectCapabilities="3711"/>
++</session>

@@ -11,12 +11,33 @@ Load this program on your boards. The LEDs should start blinking furiously.
 */
 
 #include "stdint.h"
-#include "stdio.h"
-// bsp modules required
+#include "string.h"
 #include "board.h"
+#include "debugpins.h"
 #include "leds.h"
+#include "sctimer.h"
 
+//=========================== defines =========================================
+
+#define SCTIMER_PERIOD      6400 // @32kHz = 1s
+//231006Q how can i loop without reuse the func
+
+
+//=========================== variables =======================================
+
+typedef struct {
+   uint16_t num_compare;
+} app_vars_t;
+
+app_vars_t app_vars;
+uint8_t timerflag;
+
+
+//=========================== prototypes ======================================
+
+void cb_compare(void);
 void some_delay(void);
+void sleep_50ms(void);
 
 /**
 \brief The program starts executing here.
@@ -24,14 +45,37 @@ void some_delay(void);
 int mote_main(void) {uint8_t i;
    
    board_init();
+   sctimer_set_callback(cb_compare);
+   sctimer_setCompare(sctimer_readCounter()+SCTIMER_PERIOD);
+
    leds_all_off();
-   while(1)
-   {
-     leds_error_on();          some_delay();       leds_error_off();  
-     leds_radio_on();          some_delay();       leds_radio_off();  
-     leds_sync_on();           some_delay();       leds_sync_off();  
-     leds_debug_on();          some_delay();       leds_debug_off();  
-   }
+   /*********************************************************/
+   //while(1)
+   //{
+   //  leds_error_on();          some_delay();       leds_error_off();  
+   //  leds_radio_on();          some_delay();       leds_radio_off();  
+   //  leds_sync_on();           some_delay();       leds_sync_off();  
+   //  leds_debug_on();          some_delay();       leds_debug_off();  
+   //}
+   /*********************************************************/
+
+   while(1){
+     switch (timerflag)
+     {
+     case 1:
+         leds_error_toggle(); 
+     case 2:
+         leds_radio_toggle();
+     case 3:
+         leds_sync_toggle();
+     case 4:
+         leds_debug_toggle(); 
+     }
+
+     if  (timerflag>=4)
+         timerflag = 0;
+    }
+
    
    //// error LED functions
    //leds_error_on();          some_delay();
@@ -81,5 +125,22 @@ int mote_main(void) {uint8_t i;
 
 void some_delay(void) {
    volatile uint32_t delay;
-   for (delay=0x00ffffff;delay>0;delay--);
+   for (delay=0x001fffff;delay>0;delay--);
+}
+
+
+//=========================== callbacks =======================================
+
+void cb_compare(void) {
+   
+   // increment counter
+   app_vars.num_compare++;
+   
+   // schedule again
+   sctimer_setCompare(sctimer_readCounter()+SCTIMER_PERIOD);
+   timerflag++;
+}
+
+void sleep_50ms(void) {
+   board_sleep();
 }

@@ -1,0 +1,732 @@
+diff --git a/projects/common/01bsp_leds/01bsp_leds.c b/projects/common/01bsp_leds/01bsp_leds.c
+index 1e8ce4e3..dc745f13 100644
+--- a/projects/common/01bsp_leds/01bsp_leds.c
++++ b/projects/common/01bsp_leds/01bsp_leds.c
+@@ -11,12 +11,33 @@ Load this program on your boards. The LEDs should start blinking furiously.
+ */
+ 
+ #include "stdint.h"
+-#include "stdio.h"
+-// bsp modules required
++#include "string.h"
+ #include "board.h"
++#include "debugpins.h"
+ #include "leds.h"
++#include "sctimer.h"
+ 
++//=========================== defines =========================================
++
++#define SCTIMER_PERIOD      6400 // @32kHz = 1s
++//231006Q how can i loop without reuse the func
++
++
++//=========================== variables =======================================
++
++typedef struct {
++   uint16_t num_compare;
++} app_vars_t;
++
++app_vars_t app_vars;
++uint8_t timerflag;
++
++
++//=========================== prototypes ======================================
++
++void cb_compare(void);
+ void some_delay(void);
++void sleep_50ms(void);
+ 
+ /**
+ \brief The program starts executing here.
+@@ -24,14 +45,37 @@ void some_delay(void);
+ int mote_main(void) {uint8_t i;
+    
+    board_init();
++   sctimer_set_callback(cb_compare);
++   sctimer_setCompare(sctimer_readCounter()+SCTIMER_PERIOD);
++
+    leds_all_off();
+-   while(1)
+-   {
+-     leds_error_on();          some_delay();       leds_error_off();  
+-     leds_radio_on();          some_delay();       leds_radio_off();  
+-     leds_sync_on();           some_delay();       leds_sync_off();  
+-     leds_debug_on();          some_delay();       leds_debug_off();  
+-   }
++   /*********************************************************/
++   //while(1)
++   //{
++   //  leds_error_on();          some_delay();       leds_error_off();  
++   //  leds_radio_on();          some_delay();       leds_radio_off();  
++   //  leds_sync_on();           some_delay();       leds_sync_off();  
++   //  leds_debug_on();          some_delay();       leds_debug_off();  
++   //}
++   /*********************************************************/
++
++   while(1){
++     switch (timerflag)
++     {
++     case 1:
++         leds_error_toggle(); 
++     case 2:
++         leds_radio_toggle();
++     case 3:
++         leds_sync_toggle();
++     case 4:
++         leds_debug_toggle(); 
++     }
++
++     if  (timerflag>=4)
++         timerflag = 0;
++    }
++
+    
+    //// error LED functions
+    //leds_error_on();          some_delay();
+@@ -81,5 +125,22 @@ int mote_main(void) {uint8_t i;
+ 
+ void some_delay(void) {
+    volatile uint32_t delay;
+-   for (delay=0x00ffffff;delay>0;delay--);
++   for (delay=0x001fffff;delay>0;delay--);
++}
++
++
++//=========================== callbacks =======================================
++
++void cb_compare(void) {
++   
++   // increment counter
++   app_vars.num_compare++;
++   
++   // schedule again
++   sctimer_setCompare(sctimer_readCounter()+SCTIMER_PERIOD);
++   timerflag++;
++}
++
++void sleep_50ms(void) {
++   board_sleep();
+ }
+\ No newline at end of file
+diff --git a/projects/common/01bsp_uart/01bsp_uart.c b/projects/common/01bsp_uart/01bsp_uart.c
+index 00795a20..136bab21 100644
+--- a/projects/common/01bsp_uart/01bsp_uart.c
++++ b/projects/common/01bsp_uart/01bsp_uart.c
+@@ -25,24 +25,29 @@ TeraTerm):
+ 
+ //=========================== defines =========================================
+ 
+-#define SCTIMER_PERIOD     0xffff // 0xffff@32kHz = 2s
++#define SCTIMER_PERIOD     0xfff // 0xffff@32kHz = 2s
+ uint8_t stringToSend[]       = "Hello, World!\r\n";
+ 
+ //=========================== variables =======================================
+ 
+ typedef struct {
+               uint8_t uart_lastTxByteIndex;
++              uint8_t uart_lastRxByteIndex;
++              uint8_t echoStartFlag;
++              uint8_t echoFinishFlag;
+    volatile   uint8_t uartDone;
+    volatile   uint8_t uartSendNow;
+ } app_vars_t;
+ 
+ app_vars_t app_vars;
++uint8_t stringToReceive[32];
+ 
+ //=========================== prototypes ======================================
+ 
+ void cb_compare(void);
+ void cb_uartTxDone(void);
+ uint8_t cb_uartRxCb(void);
++void some_delay(void);
+ 
+ //=========================== main ============================================
+ 
+@@ -50,11 +55,14 @@ uint8_t cb_uartRxCb(void);
+ \brief The program starts executing here.
+ */
+ int mote_main(void) {
+-   
++  
+    // clear local variable
+    memset(&app_vars,0,sizeof(app_vars_t));
+     
+    app_vars.uartSendNow = 1;
++   app_vars.uart_lastRxByteIndex = 0;
++   app_vars.echoStartFlag = 0;
++   app_vars.echoFinishFlag = 0;
+    
+    // initialize the board
+    board_init();
+@@ -72,11 +80,12 @@ int mote_main(void) {
+       // wait for timer to elapse
+       while (app_vars.uartSendNow==0);
+       app_vars.uartSendNow = 0;
+-      
++      uart_writeByte(0x66);
+       // send string over UART
+       app_vars.uartDone              = 0;
+       app_vars.uart_lastTxByteIndex  = 0;
+       uart_writeByte(stringToSend[app_vars.uart_lastTxByteIndex]);
++      //uart_writeByte(stringToReceive);
+       while(app_vars.uartDone==0);
+    }
+ }
+@@ -93,25 +102,43 @@ void cb_compare(void) {
+ }
+ 
+ void cb_uartTxDone(void) {
+-   app_vars.uart_lastTxByteIndex++;
+-   if (app_vars.uart_lastTxByteIndex<sizeof(stringToSend)) {
+-      uart_writeByte(stringToSend[app_vars.uart_lastTxByteIndex]);
+-   } else {
+-      app_vars.uartDone = 1;
++   if (app_vars.echoStartFlag == 1)
++   {
++   for(uint8_t i=0;i<=app_vars.uart_lastRxByteIndex;i=i+1){
++      uart_writeByte(stringToReceive[i]);
++      }
++   uart_writeByte('\n');
++   app_vars.uart_lastRxByteIndex = 0;
++   app_vars.echoFinishFlag = 1;
+    }
++   app_vars.uartDone = 1;
++   //else {
++   //  app_vars.uart_lastTxByteIndex++;
++   //  if (app_vars.uart_lastTxByteIndex<sizeof(app_vars.uart_lastRxByteIndex)) {
++   //     uart_writeByte(stringToSend[app_vars.uart_lastTxByteIndex]);
++   //     //uart_writeByte(stringToReceive);
++   //  } else {
++   //     app_vars.uartDone = 1;
++   //  }
++   // }
+ }
+ 
+ uint8_t cb_uartRxCb(void) {
+    uint8_t byte;
+-   
+    // toggle LED
+-   leds_error_toggle();
+-   
++   leds_error_on();
+    // read received byte
+    byte = uart_readByte();
+-   
++   stringToReceive[app_vars.uart_lastRxByteIndex] = byte;
++   if(stringToReceive[app_vars.uart_lastRxByteIndex]==0x0d) 
++     {app_vars.echoStartFlag=1;}  
++   app_vars.uart_lastRxByteIndex ++;
++
+    // echo that byte over serial
+-   uart_writeByte(byte);
+-   
+    return 0;
++}
++
++void some_delay(void) {
++   volatile uint32_t delay;
++   for (delay=0x00fffff;delay>0;delay--);
+ }
+\ No newline at end of file
+diff --git a/projects/nrf52840_dk/nrf52840_dk.emProject b/projects/nrf52840_dk/nrf52840_dk.emProject
+index e19faf74..45e9796f 100644
+--- a/projects/nrf52840_dk/nrf52840_dk.emProject
++++ b/projects/nrf52840_dk/nrf52840_dk.emProject
+@@ -9,7 +9,7 @@
+     c_preprocessor_definitions="NDEBUG"
+     gcc_optimization_level="Optimize For Size"
+     link_time_optimization="No" />
+-  <project Name="01bsp_leds">
++  <project Name="01bsp_bmx160">
+     <configuration
+       LIBRARY_IO_TYPE="None"
+       Name="Common"
+@@ -26,7 +26,7 @@
+       arm_target_device_name="nRF52840_xxAA"
+       arm_target_interface_type="SWD"
+       c_preprocessor_definitions="NRF52840_XXAA;NRF52840_DK"
+-      c_user_include_directories="../../bsp/boards;../../bsp/boards/nrf52840_dk;../../bsp/boards/nrf52840_dk/sdk;../../inc"
++      c_user_include_directories="../../bsp/boards;../../bsp/boards/nrf52840_dk;../../bsp/boards/nrf52840_dk/sdk;../../bsp/chips/bmx160;../../inc"
+       debug_register_definition_file="../../bsp/boards/nrf52840-dk/sdk/nrf52840.svd"
+       debug_start_from_entry_point_symbol="No"
+       debug_target_connection="J-Link"
+@@ -46,13 +46,7 @@
+       Name="application"
+       exclude=""
+       filter="*.c"
+-      path="../common/01bsp_leds"
+-      recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
++      path="01bsp_bmx160"
+       recurse="Yes" />
+     <folder
+       Name="bsp"
+@@ -60,6 +54,18 @@
+       filter="*.s;*.c;*.h"
+       path="../../bsp/boards/nrf52840_dk"
+       recurse="Yes" />
++    <folder
++      Name="chips"
++      exclude=""
++      filter=""
++      path="../../bsp/chips/bmx160"
++      recurse="Yes" />
++    <folder
++      Name="inc"
++      exclude=""
++      filter="*.h"
++      path="../../inc"
++      recurse="Yes" />
+   </project>
+   <project Name="01bsp_debugpins">
+     <configuration
+@@ -100,18 +106,18 @@
+       filter="*.c"
+       path="../common/01bsp_debugpins"
+       recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
+-      recurse="Yes" />
+     <folder
+       Name="bsp"
+       exclude="system_nrf52.c"
+       filter="*.s;*.c;*.h"
+       path="../../bsp/boards/nrf52840_dk"
+       recurse="Yes" />
++    <folder
++      Name="inc"
++      exclude=""
++      filter="*.h"
++      path="../../inc"
++      recurse="Yes" />
+   </project>
+   <project Name="01bsp_eui64">
+     <configuration
+@@ -152,20 +158,20 @@
+       filter="*.c"
+       path="../common/01bsp_eui64"
+       recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
+-      recurse="Yes" />
+     <folder
+       Name="bsp"
+       exclude="system_nrf52.c"
+       filter="*.s;*.c;*.h"
+       path="../../bsp/boards/nrf52840_dk"
+       recurse="Yes" />
++    <folder
++      Name="inc"
++      exclude=""
++      filter="*.h"
++      path="../../inc"
++      recurse="Yes" />
+   </project>
+-  <project Name="01bsp_uart">
++  <project Name="01bsp_i2c">
+     <configuration
+       LIBRARY_IO_TYPE="None"
+       Name="Common"
+@@ -202,13 +208,7 @@
+       Name="application"
+       exclude=""
+       filter="*.c"
+-      path="../common/01bsp_uart"
+-      recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
++      path="../common/01bsp_i2c"
+       recurse="Yes" />
+     <folder
+       Name="bsp"
+@@ -216,8 +216,20 @@
+       filter="*.s;*.c;*.h"
+       path="../../bsp/boards/nrf52840_dk"
+       recurse="Yes" />
++    <folder
++      Name="chips"
++      exclude=""
++      filter=""
++      path="../../bsp/chips/bmx160"
++      recurse="Yes" />
++    <folder
++      Name="inc"
++      exclude=""
++      filter="*.h"
++      path="../../inc"
++      recurse="Yes" />
+   </project>
+-  <project Name="01bsp_sctimer">
++  <project Name="01bsp_leds">
+     <configuration
+       LIBRARY_IO_TYPE="None"
+       Name="Common"
+@@ -254,13 +266,7 @@
+       Name="application"
+       exclude=""
+       filter="*.c"
+-      path="../common/01bsp_sctimer"
+-      recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
++      path="../common/01bsp_leds"
+       recurse="Yes" />
+     <folder
+       Name="bsp"
+@@ -268,8 +274,14 @@
+       filter="*.s;*.c;*.h"
+       path="../../bsp/boards/nrf52840_dk"
+       recurse="Yes" />
++    <folder
++      Name="inc"
++      exclude=""
++      filter="*.h"
++      path="../../inc"
++      recurse="Yes" />
+   </project>
+-  <project Name="01bsp_i2c">
++  <project Name="01bsp_radio">
+     <configuration
+       LIBRARY_IO_TYPE="None"
+       Name="Common"
+@@ -306,13 +318,7 @@
+       Name="application"
+       exclude=""
+       filter="*.c"
+-      path="../common/01bsp_i2c"
+-      recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
++      path="../common/01bsp_radio"
+       recurse="Yes" />
+     <folder
+       Name="bsp"
+@@ -321,13 +327,13 @@
+       path="../../bsp/boards/nrf52840_dk"
+       recurse="Yes" />
+     <folder
+-      Name="chips"
++      Name="inc"
+       exclude=""
+-      filter=""
+-      path="../../bsp/chips/bmx160"
++      filter="*.h"
++      path="../../inc"
+       recurse="Yes" />
+   </project>
+-  <project Name="01bsp_bmx160">
++  <project Name="01bsp_sctimer">
+     <configuration
+       LIBRARY_IO_TYPE="None"
+       Name="Common"
+@@ -344,7 +350,7 @@
+       arm_target_device_name="nRF52840_xxAA"
+       arm_target_interface_type="SWD"
+       c_preprocessor_definitions="NRF52840_XXAA;NRF52840_DK"
+-      c_user_include_directories="../../bsp/boards;../../bsp/boards/nrf52840_dk;../../bsp/boards/nrf52840_dk/sdk;../../bsp/chips/bmx160;../../inc"
++      c_user_include_directories="../../bsp/boards;../../bsp/boards/nrf52840_dk;../../bsp/boards/nrf52840_dk/sdk;../../inc"
+       debug_register_definition_file="../../bsp/boards/nrf52840-dk/sdk/nrf52840.svd"
+       debug_start_from_entry_point_symbol="No"
+       debug_target_connection="J-Link"
+@@ -364,13 +370,7 @@
+       Name="application"
+       exclude=""
+       filter="*.c"
+-      path="01bsp_bmx160"
+-      recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
++      path="../common/01bsp_sctimer"
+       recurse="Yes" />
+     <folder
+       Name="bsp"
+@@ -379,13 +379,13 @@
+       path="../../bsp/boards/nrf52840_dk"
+       recurse="Yes" />
+     <folder
+-      Name="chips"
++      Name="inc"
+       exclude=""
+-      filter=""
+-      path="../../bsp/chips/bmx160"
++      filter="*.h"
++      path="../../inc"
+       recurse="Yes" />
+   </project>
+-  <project Name="01bsp_radio">
++  <project Name="01bsp_uart">
+     <configuration
+       LIBRARY_IO_TYPE="None"
+       Name="Common"
+@@ -422,13 +422,7 @@
+       Name="application"
+       exclude=""
+       filter="*.c"
+-      path="../common/01bsp_radio"
+-      recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
++      path="../common/01bsp_uart"
+       recurse="Yes" />
+     <folder
+       Name="bsp"
+@@ -436,6 +430,12 @@
+       filter="*.s;*.c;*.h"
+       path="../../bsp/boards/nrf52840_dk"
+       recurse="Yes" />
++    <folder
++      Name="inc"
++      exclude=""
++      filter="*.h"
++      path="../../inc"
++      recurse="Yes" />
+   </project>
+   <project Name="02drv_openserial">
+     <configuration
+@@ -476,12 +476,6 @@
+       filter="*.c"
+       path="../common/02drv_openserial"
+       recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
+-      recurse="Yes" />
+     <folder
+       Name="bsp"
+       exclude="system_nrf52.c"
+@@ -494,6 +488,12 @@
+       filter="*.h;*.c"
+       path="../../drivers/common"
+       recurse="Yes" />
++    <folder
++      Name="inc"
++      exclude=""
++      filter="*.h"
++      path="../../inc"
++      recurse="Yes" />
+     <folder
+       Name="kernel"
+       exclude=""
+@@ -540,12 +540,6 @@
+       filter="*.c"
+       path="../common/02drv_opentimers"
+       recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
+-      recurse="Yes" />
+     <folder
+       Name="bsp"
+       exclude="system_nrf52.c"
+@@ -558,6 +552,12 @@
+       filter="*.h;*.c"
+       path="../../drivers/common"
+       recurse="Yes" />
++    <folder
++      Name="inc"
++      exclude=""
++      filter="*.h"
++      path="../../inc"
++      recurse="Yes" />
+     <folder
+       Name="kernel"
+       exclude=""
+@@ -604,12 +604,6 @@
+       filter="*.c"
+       path="../common/03oos_macpong"
+       recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
+-      recurse="Yes" />
+     <folder
+       Name="bsp"
+       exclude="system_nrf52.c"
+@@ -622,6 +616,12 @@
+       filter="*.h;*.c"
+       path="../../drivers/common"
+       recurse="Yes" />
++    <folder
++      Name="inc"
++      exclude=""
++      filter="*.h"
++      path="../../inc"
++      recurse="Yes" />
+     <folder
+       Name="kernel"
+       exclude=""
+@@ -674,12 +674,6 @@
+       filter="*.c"
+       path="../common/03oos_openwsn"
+       recurse="Yes" />
+-    <folder
+-      Name="inc"
+-      exclude=""
+-      filter="*.h"
+-      path="../../inc"
+-      recurse="Yes" />
+     <folder
+       Name="bsp"
+       exclude="system_nrf52.c"
+@@ -693,15 +687,16 @@
+       path="../../drivers/common"
+       recurse="Yes" />
+     <folder
+-      Name="kernel"
++      Name="inc"
+       exclude=""
+-      filter="*.h;*.c"
+-      path="../../kernel"
++      filter="*.h"
++      path="../../inc"
+       recurse="Yes" />
+     <folder
+-      Name="openstack"
++      Name="kernel"
++      exclude=""
+       filter="*.h;*.c"
+-      path="../../openstack"
++      path="../../kernel"
+       recurse="Yes" />
+     <folder
+       Name="openapps"
+@@ -709,6 +704,11 @@
+       filter="*.h;*.c"
+       path="../../openapps"
+       recurse="Yes" />
++    <folder
++      Name="openstack"
++      filter="*.h;*.c"
++      path="../../openstack"
++      recurse="Yes" />
+     <folder
+       Name="openweb"
+       exclude=""
+diff --git a/projects/nrf52840_dk/nrf52840_dk.emSession b/projects/nrf52840_dk/nrf52840_dk.emSession
+index b8083ee0..1c689740 100644
+--- a/projects/nrf52840_dk/nrf52840_dk.emSession
++++ b/projects/nrf52840_dk/nrf52840_dk.emSession
+@@ -2,50 +2,63 @@
+ <session>
+  <Bookmarks/>
+  <Breakpoints groups="Breakpoints" active_group="Breakpoints">
+-  <BreakpointListItem trigger="" line="48" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../common/01bsp_sctimer/01bsp_sctimer.c" useHWbreakpoint="false"/>
+-  <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
++  <BreakpointListItem trigger="" line="48" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common/01bsp_sctimer/01bsp_sctimer.c" useHWbreakpoint="false"/>
+  </Breakpoints>
+  <ExecutionProfileWindow/>
+  <FrameBuffer>
+   <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_leds_Debug" addressText="" accessByDisplayWidth="0"/>
+   <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_sctimer_Debug" addressText="" accessByDisplayWidth="0"/>
++  <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_uart_Debug" addressText="" accessByDisplayWidth="0"/>
+  </FrameBuffer>
+  <Memory1>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+  </Memory1>
+  <Memory2>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+  </Memory2>
+  <Memory3>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+  </Memory3>
+  <Memory4>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+  </Memory4>
+  <Project>
+   <ProjectSessionItem path="nrf52840-dk"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_leds"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_leds;application"/>
+   <ProjectSessionItem path="nrf52840-dk;01bsp_uart"/>
+   <ProjectSessionItem path="nrf52840-dk;01bsp_uart;application"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;bsp"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;bsp;sdk"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;inc"/>
+  </Project>
+  <Register1>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register1>
+  <Register2>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register2>
+  <Register3>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register3>
+  <Register4>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register4>
+  <Threads>
+   <ThreadsWindow showLists=""/>
+@@ -54,7 +67,11 @@
+   <Trace enabled="Yes"/>
+  </TraceWindow>
+  <Watch1>
+-  <Watches active="1" update="Never"/>
++  <Watches active="1" update="Never">
++   <Watchpoint expression="counter_current" name="counter_current" radix="16" linenumber="149" filename="../common/01bsp_leds/01bsp_leds.c"/>
++   <Watchpoint expression="timerflag" name="timerflag" radix="-1" linenumber="63" filename="../common/01bsp_leds/01bsp_leds.c"/>
++   <Watchpoint expression="byte" name="byte" radix="16" linenumber="117" filename="../common/01bsp_uart/01bsp_uart.c"/>
++  </Watches>
+  </Watch1>
+  <Watch2>
+   <Watches active="0" update="Never"/>
+@@ -66,7 +83,10 @@
+   <Watches active="0" update="Never"/>
+  </Watch4>
+  <Files>
+-  <SessionOpenFile windowGroup="DockEditLeft" x="19" y="65" useTextEdit="1" path="../common/01bsp_uart/01bsp_uart.c" left="0" selected="1" top="44" codecName="Default"/>
++  <SessionOpenFile windowGroup="DockEditLeft" x="38" y="101" useTextEdit="1" path="../common/01bsp_uart/01bsp_uart.c" left="0" selected="1" top="78" codecName="Default"/>
++  <SessionOpenFile windowGroup="DockEditLeft" x="32" y="178" useTextEdit="1" openedFrom="D:/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/common/01bsp_uart/01bsp_uart.c" path="../../bsp/boards/nrf52840_dk/uart.c" left="0" top="156" codecName="Default"/>
++  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="29" useTextEdit="1" path="../../bsp/boards/nrf52840_dk/board.c" left="0" top="78" codecName="Default"/>
++  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="2860" useTextEdit="1" openedFrom="D:/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/bsp/boards/nrf52840_dk/uart.c" path="../../bsp/boards/nrf52840_dk/sdk/nrf52840.h" left="0" top="2843" codecName="Default"/>
+  </Files>
+- <EMStudioWindow activeProject="01bsp_sctimer" fileDialogDefaultFilter="*.emProject" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/nrf52840_dk" debugSearchPath="" autoConnectCapabilities="3711"/>
++ <EMStudioWindow activeProject="01bsp_uart" fileDialogDefaultFilter="*.emProject" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/nrf52840_dk" debugSearchPath="" autoConnectCapabilities="3711"/>
+ </session>
