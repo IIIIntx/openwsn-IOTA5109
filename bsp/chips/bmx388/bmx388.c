@@ -27,10 +27,8 @@ typedef struct{
     //int16_t acc_z;
 
     uint8_t pres[3];
-    //uint8_t temp[3];
+    uint8_t temp[3];
     
-
-    //uint32_t pres;
 }bmx388x_data_t;
 
  //typedef struct bmp388_handle_s
@@ -55,6 +53,8 @@ typedef struct{
 typedef struct {
     
     bmx388x_data_t bmx388x_data;
+        uint32_t fullpres;
+        uint32_t fulltemp;
         uint32_t sen_time;
         uint8_t res[21];
         double  PAR_T[3];//3个温度修正系数
@@ -141,6 +141,8 @@ void bmx160_set_cmd(uint8_t cmd) {
 void bmx160_read_9dof_data(void) {
     i2c_read_bytes(BMX160_REG_ADDR_DATA, (uint8_t*)(&bmx388x_var.bmx388x_data), sizeof(bmx388x_data_t));
     //i2c_read_bytes(BMX160_REG_ADDR_DATA, (uint8_t*)(&bmx388x_var.bmx388x_data), 1);
+    bmx388x_var.fulltemp = (bmx388x_var.bmx388x_data.temp[2] << 16) | (bmx388x_var.bmx388x_data.temp[1] << 8) | bmx388x_var.bmx388x_data.temp[0];
+    bmx388x_var.fullpres = (bmx388x_var.bmx388x_data.pres[2] << 16) | (bmx388x_var.bmx388x_data.pres[1] << 8) | bmx388x_var.bmx388x_data.pres[0];
 }
 
 
@@ -215,7 +217,7 @@ void bmp388_compensation_temp(void)
     float partial_data1;
     float partial_data2;
 
-    partial_data1 = (float)(bmx388x_var.bmx388x_data.pres-bmx388x_var.PAR_T[0]);
+    partial_data1 = (float)(bmx388x_var.fulltemp-bmx388x_var.PAR_T[0]);
     partial_data2 = (float)(partial_data1*bmx388x_var.PAR_T[1]);
 
     bmx388x_var.t_fine = partial_data2+(partial_data1*partial_data1)*bmx388x_var.PAR_T[2];
