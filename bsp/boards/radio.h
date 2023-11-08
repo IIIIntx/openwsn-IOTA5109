@@ -85,7 +85,7 @@ void                radio_getReceivedFrame(uint8_t* bufRead,
                                  int8_t* rssi,
                                 uint8_t* lqi,
                                    bool* crc);
-
+void float_to_char(float number, char *buffer, int decimal_digits);
 // interrupt handlers
 kick_scheduler_t    radio_isr(void);
 

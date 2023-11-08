@@ -47,6 +47,7 @@ void    uart_clearRxInterrupts(void);
 void    uart_clearTxInterrupts(void);
 void    uart_setCTS(bool state);
 void    uart_writeByte(uint8_t byteToWrite);
+void    uart_writeFloatByte(float dataToWrite);
 #if BOARD_FASTSIM_ENABLED
 void    uart_writeCircularBuffer_FASTSIM(uint8_t* buffer, uint16_t* outputBufIdxR, uint16_t* outputBufIdxW);
 #endif

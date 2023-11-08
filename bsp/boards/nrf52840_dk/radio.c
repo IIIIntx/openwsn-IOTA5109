@@ -468,6 +468,27 @@ static void hfclock_stop(void) {
     }
 }
 
+void float_to_char(float number, char *buffer, int decimal_digits) {
+    int whole_part = (int)number; // 整数部分
+    float decimal_part = number - whole_part; // 小数部分
+
+    // 将整数部分转换为char类型的数组
+    sprintf(buffer, "%d", whole_part);
+
+    // 定位到小数点的位置
+    int decimal_position = strlen(buffer);
+    buffer[decimal_position] = '.';
+
+    // 将小数部分转换为char类型的数组
+    for (int i = 1; i <= decimal_digits; i++) {
+        decimal_part *= 10;
+        int digit = (int)decimal_part;
+        buffer[decimal_position + i] = '0' + digit;
+        decimal_part -= digit;
+    }
+
+    buffer[decimal_position + decimal_digits + 1] = '\0'; // 添加字符串结束符
+}
 //=========================== callbacks =======================================
 
 

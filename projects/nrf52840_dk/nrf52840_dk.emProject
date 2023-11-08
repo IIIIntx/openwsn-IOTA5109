@@ -404,6 +404,10 @@
       macros=""
       project_directory=""
       project_type="Executable" />
+    <configuration
+      Name="Debug"
+      c_include_files=""
+      c_user_include_directories="../../bsp/chips/bmx388" />
     <folder
       Name="application"
       exclude=""
@@ -416,6 +420,12 @@
       filter="*.s;*.c;*.h"
       path="../../bsp/boards/nrf52840_dk"
       recurse="Yes" />
+    <folder
+      Name="chip"
+      exclude=""
+      filter=""
+      path="D:\Courses\HKUSTgz\23FALL\IOTA5109\openwsn-IOTA5109\bsp\chips\bmx388"
+      recurse="No" />
     <folder
       Name="inc"
       exclude=""

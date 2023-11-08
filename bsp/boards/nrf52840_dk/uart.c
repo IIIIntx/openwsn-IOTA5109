@@ -12,7 +12,7 @@
 #include "leds.h"
 #include "debugpins.h"
 #include "uart.h"
-
+#include "stdio.h"
 //=========================== defines =========================================
 
 #define UART_RX_PIN       NRF_GPIO_PIN_MAP(0,8) // p0.08
@@ -128,6 +128,20 @@ void uart_writeByte(uint8_t byteToWrite){
 uint8_t uart_readByte(void) {
     
     return NRF_UART0->RXD;
+}
+
+void uart_writeFloatByte(float dataToWrite){
+    
+    char buffer[50];  // make sure the buffer is large enough!
+
+    int length = sprintf(buffer, "%f", dataToWrite);  // convert float to string and get length
+
+    // Now, send the string over UART
+    for(int i=0; i<length; i++)
+    {
+        uart_writeByte(buffer[i]);  // assuming UART_send() is your function to send a byte over UART
+    }
+
 }
 
 //=========================== private =========================================

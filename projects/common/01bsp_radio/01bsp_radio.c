@@ -22,6 +22,12 @@ end of frame event), it will turn on its error LED.
 #include "leds.h"
 #include "sctimer.h"
 #include "uart.h"
+#include "i2c.h"
+#include "stdint.h"
+#include "string.h"
+#include "bmx388.h"
+#include "stdio.h"
+#include "math.h"
 
 //=========================== defines =========================================
 
@@ -29,7 +35,7 @@ end of frame event), it will turn on its error LED.
 #define LEN_PKT_TO_SEND 20+LENGTH_CRC
 #define CHANNEL         11             ///< 11=2.405GHz
 #define TIMER_PERIOD    (0xffff>>4)    ///< 0xffff = 2s@32kHz
-#define ID              0x99           ///< byte sent in the packets
+#define ID              0x55           ///< byte sent in the packets
 
 uint8_t stringToSend[]  = "+002 Ptest.24.00.12.-010\n";
 
@@ -69,6 +75,10 @@ typedef struct {
                 int8_t          rxpk_rssi;
                 uint8_t         rxpk_lqi;
                 bool            rxpk_crc;
+
+                uint8_t who_am_i;
+                float   temp_f;
+                char    temp_data[6];
 } app_vars_t;
 
 app_vars_t app_vars;
@@ -106,6 +116,13 @@ int mote_main(void) {
 
     app_vars.uartDone = 1;
 
+    // alway set address first
+    i2c_set_addr(BMX388_ADDR);
+    bmx160_power_on();
+
+    // should be 0x50 for bmx388
+    app_vars.who_am_i = bmx388_who_am_i();
+
     // add callback functions radio
     radio_setStartFrameCb(cb_startFrame);
     radio_setEndFrameCb(cb_endFrame);
@@ -139,6 +156,14 @@ int mote_main(void) {
         while (app_vars.flags==0x00) {
             board_sleep();
         }
+
+        //read bmx388 data
+        bmx160_read_9dof_data();
+        bmp388_get_compensation();
+        bmp388_compensation_temp();
+        app_vars.temp_f = bmx388_read_t_fine();
+        float_to_char(app_vars.temp_f,app_vars.temp_data,4);
+
 
         // handle and clear every flag
         while (app_vars.flags) {
@@ -275,6 +300,8 @@ int mote_main(void) {
                     app_vars.packet[i++] = 's';
                     app_vars.packet[i++] = 't';
                     app_vars.packet[i++] = CHANNEL;
+                    memcpy(&app_vars.packet[i],&app_vars.temp_data[0],6);
+                    i=i+6;
                     while (i<app_vars.packet_len) {
                         app_vars.packet[i++] = ID;
                     }

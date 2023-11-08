@@ -81,15 +81,15 @@ int mote_main(void) {
     bmx160_power_on();
     app_vars.pwr_status = bmx160_get_pwr_status();
 
-    // should be 0xd8 for bmx160
+    // should be 0x50 for bmx388
     app_vars.who_am_i = bmx388_who_am_i();
         
 
     while (1) {
 
-        //// wait for timer to elapse
-        //while (app_vars.uartSendNow==0);
-        //app_vars.uartSendNow = 0;
+        // wait for timer to elapse
+        while (app_vars.uartSendNow==0);
+        app_vars.uartSendNow = 0;
         //bmx160_set_cmd(BMX160_CMD_PMU_GYR_NORMAL);
 
         bmx160_read_9dof_data();
@@ -99,6 +99,8 @@ int mote_main(void) {
 
         bmp388_get_compensation();
         bmp388_compensation_temp();
+        app_vars.temp_f = bmx388_read_t_fine();
+
 
         //i=0;
         //tmp = bmx160_read_gyr_x();
@@ -116,10 +118,11 @@ int mote_main(void) {
         //app_vars.uartToSend[i++] = '\r';
         //app_vars.uartToSend[i++] = '\n';
 
-        //// send string over UART
-        //app_vars.uartDone              = 0;
-        //app_vars.uart_lastTxByteIndex  = 0;
+        // send string over UART
+        app_vars.uartDone              = 0;
+        app_vars.uart_lastTxByteIndex  = 0;
         //uart_writeByte(app_vars.uartToSend[app_vars.uart_lastTxByteIndex]);
+        //uart_writeFloatByte(app_vars.temp_f);
         //while(app_vars.uartDone==0);
         //app_vars.sensorTime = bmp388_get_sensortime();
     }
