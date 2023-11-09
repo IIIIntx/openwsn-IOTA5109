@@ -38,7 +38,7 @@ end of frame event), it will turn on its error LED.
 #define ID              0x55           ///< byte sent in the packets
 #define track_flag      0x00           ///< 0x01 for host 0x00 for slave
 
-uint8_t stringToSend[]  = "+002 Ptest.24.\n";
+uint8_t stringToSend[]  = "+002 Ptest.24\n";
 
 //=========================== variables =======================================
 
