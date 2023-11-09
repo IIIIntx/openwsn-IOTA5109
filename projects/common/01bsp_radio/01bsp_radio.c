@@ -36,8 +36,9 @@ end of frame event), it will turn on its error LED.
 #define CHANNEL         11             ///< 11=2.405GHz
 #define TIMER_PERIOD    (0xffff>>4)    ///< 0xffff = 2s@32kHz
 #define ID              0x55           ///< byte sent in the packets
+#define track_flag      0x00           ///< 0x01 for host 0x00 for slave
 
-uint8_t stringToSend[]  = "+002 Ptest.24.00.12.-010\n";
+uint8_t stringToSend[]  = "+002 Ptest.24.\n";
 
 //=========================== variables =======================================
 
@@ -99,6 +100,7 @@ uint8_t  cb_uart_rx(void);
 */
 int mote_main(void) {
     uint8_t i;
+    uint8_t j;
 
     uint8_t freq_offset;
     uint8_t sign;
@@ -116,12 +118,14 @@ int mote_main(void) {
 
     app_vars.uartDone = 1;
 
-    // alway set address first
-    i2c_set_addr(BMX388_ADDR);
-    bmx160_power_on();
+    if(track_flag){
+      // alway set address first
+      i2c_set_addr(BMX388_ADDR);
+      bmx160_power_on();
 
-    // should be 0x50 for bmx388
-    app_vars.who_am_i = bmx388_who_am_i();
+      // should be 0x50 for bmx388
+      app_vars.who_am_i = bmx388_who_am_i();
+    }
 
     // add callback functions radio
     radio_setStartFrameCb(cb_startFrame);
@@ -157,12 +161,14 @@ int mote_main(void) {
             board_sleep();
         }
 
-        //read bmx388 data
-        bmx160_read_9dof_data();
-        bmp388_get_compensation();
-        bmp388_compensation_temp();
-        app_vars.temp_f = bmx388_read_t_fine();
-        float_to_char(app_vars.temp_f,app_vars.temp_data,4);
+        if(track_flag){
+          //read bmx388 data
+          bmx160_read_9dof_data();
+          bmp388_get_compensation();
+          bmp388_compensation_temp();
+          app_vars.temp_f = bmx388_read_t_fine();
+          float_to_char(app_vars.temp_f,app_vars.temp_data,4);
+        }
 
 
         // handle and clear every flag
@@ -224,19 +230,57 @@ int mote_main(void) {
                         }
 
                         i = 0;
-                        if (sign) {
-                            stringToSend[i++] = '-';
-                        } else {
-                            stringToSend[i++] = '+';
-                        }
-                        stringToSend[i++] = '0'+read/100;
-                        stringToSend[i++] = '0'+read/10;
-                        stringToSend[i++] = '0'+read%10;
-                        stringToSend[i++] = ' ';
+                        //if (sign) {
+                        //    stringToSend[i++] = '-';
+                        //} else {
+                        //    stringToSend[i++] = '+';
+                        //}
+                        //stringToSend[i++] = '0'+read/100;
+                        //stringToSend[i++] = '0'+read/10;
+                        //stringToSend[i++] = '0'+read%10;
+                        //stringToSend[i++] = ' ';
 
-                        stringToSend[i++] = 'P';
-                        memcpy(&stringToSend[i],&app_vars.packet[0],14);
-                        i += 14;
+                        //stringToSend[i++] = 'P';
+                        ////memcpy(&stringToSend[i],&app_vars.packet[0],14);
+                        ////i += 14;
+
+                        //memcpy(&stringToSend[i],&app_vars.packet[5],6);
+                        //i += 6;
+                        //stringToSend[i++] = ' ';
+
+                        //stringToSend[i++] = '0'+j/100;
+                        //stringToSend[i++] = '0'+j%100-j%10;
+                        //stringToSend[i++] = '0'+j%10;
+
+                        //j ++;
+                        //if(j>=255)  { j = 0;}
+                        
+
+                        //sign = (app_vars.rxpk_rssi & 0x80) >> 7;
+                        //if (sign){
+                        //    read = 0xff - (uint8_t)(app_vars.rxpk_rssi) + 1;
+                        //} else {
+                        //    read = app_vars.rxpk_rssi;
+                        //}
+
+                        //if (sign) {
+                        //    stringToSend[i++] = '-';
+                        //} else {
+                        //    stringToSend[i++] = '+';
+                        //}
+                        //stringToSend[i++] = '0'+read/100;
+                        //stringToSend[i++] = '0'+read/10;
+                        //stringToSend[i++] = '0'+read%10;
+
+                        stringToSend[i++] = '0'+((uint8_t)LEN_PKT_TO_SEND)/10;
+                        stringToSend[i++] = '0'+((uint8_t)LEN_PKT_TO_SEND)%10;
+                        stringToSend[i++] = ' ';
+                        stringToSend[i++] = '0'+j/100;
+                        stringToSend[i++] = '0'+(j%100-j%10)/10;
+                        stringToSend[i++] = '0'+j%10;
+                        stringToSend[i++] = ' ';
+                        stringToSend[i++] = '0'+app_vars.rxpk_crc%10;
+                        stringToSend[i++] = ' ';
 
                         sign = (app_vars.rxpk_rssi & 0x80) >> 7;
                         if (sign){
@@ -256,6 +300,9 @@ int mote_main(void) {
 
                         stringToSend[sizeof(stringToSend)-2] = '\r';
                         stringToSend[sizeof(stringToSend)-1] = '\n';
+
+                        j ++;
+                        if(j>=255)  { j = 0;}
 
                         // send string over UART
                         if (app_vars.uartDone == 1) {
@@ -300,8 +347,11 @@ int mote_main(void) {
                     app_vars.packet[i++] = 's';
                     app_vars.packet[i++] = 't';
                     app_vars.packet[i++] = CHANNEL;
-                    memcpy(&app_vars.packet[i],&app_vars.temp_data[0],6);
-                    i=i+6;
+                    if(track_flag){
+                      memcpy(&app_vars.packet[i],&app_vars.temp_data[0],6);
+                      i=i+6;
+                    }
+
                     while (i<app_vars.packet_len) {
                         app_vars.packet[i++] = ID;
                     }
