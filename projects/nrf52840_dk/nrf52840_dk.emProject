@@ -407,7 +407,7 @@
     <configuration
       Name="Debug"
       c_include_files=""
-      c_user_include_directories="../../bsp/chips/bmx388" />
+      c_user_include_directories="../../bsp/chips/bmx388;../../bsp/chips/bmx160" />
     <folder
       Name="application"
       exclude=""
@@ -424,7 +424,7 @@
       Name="chip"
       exclude=""
       filter=""
-      path="D:\Courses\HKUSTgz\23FALL\IOTA5109\openwsn-IOTA5109\bsp\chips\bmx388"
+      path="D:\Courses\HKUSTgz\23FALL\IOTA5109\openwsn-IOTA5109\bsp\chips\bmx160"
       recurse="No" />
     <folder
       Name="inc"
