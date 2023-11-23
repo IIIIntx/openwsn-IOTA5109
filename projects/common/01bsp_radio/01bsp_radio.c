@@ -33,13 +33,13 @@ end of frame event), it will turn on its error LED.
 
 #define LENGTH_PACKET   125+LENGTH_CRC  ///< maximum length is 127 bytes
 #define LEN_PKT_TO_SEND 20+LENGTH_CRC
-#define CHANNEL         11             ///< 11=2.405GHz
+#define CHANNEL         13             ///< 11=2.405GHz
 #define TIMER_PERIOD    (0xffff>>4)    ///< 0xffff = 2s@32kHz
 #define ID              0x55           ///< byte sent in the packets
 #define track_flag      0x01           ///< 0x01 for host 0x00 for slave
 #define BUFFER_SIZE     0x08   //2B*3 axises value + 2B ending with '\r\n'
 
-uint8_t stringToSend[]  = "+002 Ptest.24\n";
+uint8_t stringToSend[]  = "+002 Pt\n";
 
 //=========================== variables =======================================
 
@@ -137,12 +137,15 @@ int mote_main(void) {
     //  app_vars.who_am_i = bmx388_who_am_i();
     //}
 
-    // set bmx160
-    // alway set address first
-    i2c_set_addr(BMX160_ADDR);
+    
+    if(track_flag){
+      // set bmx160
+      // alway set address first
+      i2c_set_addr(BMX160_ADDR);
 
-    // should be 0x50 for bmx388
-    app_vars.who_am_i = bmx160_who_am_i();
+      // should be 0x50 for bmx388
+      app_vars.who_am_i = bmx160_who_am_i();
+    }
 
 
     // add callback functions radio
@@ -342,7 +345,7 @@ int mote_main(void) {
                         memcpy(&stringToSend[i],&app_vars.packet[5],8);
                         }
 
-                        stringToSend[sizeof(stringToSend)-2] = '\r';
+                        //stringToSend[sizeof(stringToSend)-2] = '\r';
                         stringToSend[sizeof(stringToSend)-1] = '\n';
 
                         //j ++;
