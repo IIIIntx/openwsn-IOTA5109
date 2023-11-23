@@ -36,7 +36,7 @@ end of frame event), it will turn on its error LED.
 #define CHANNEL         13             ///< 11=2.405GHz
 #define TIMER_PERIOD    (0xffff>>4)    ///< 0xffff = 2s@32kHz
 #define ID              0x55           ///< byte sent in the packets
-#define track_flag      0x01           ///< 0x01 for host 0x00 for slave
+#define track_flag      0x00           ///< 0x01 for host 0x00 for slave
 #define BUFFER_SIZE     0x08   //2B*3 axises value + 2B ending with '\r\n'
 
 uint8_t stringToSend[]  = "+002 Pt\n";
