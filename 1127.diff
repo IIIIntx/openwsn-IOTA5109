@@ -1,0 +1,631 @@
+diff --git a/projects/common/01bsp_radio/01bsp_radio.c b/projects/common/01bsp_radio/01bsp_radio.c
+index 94ac5b36..62105148 100644
+--- a/projects/common/01bsp_radio/01bsp_radio.c
++++ b/projects/common/01bsp_radio/01bsp_radio.c
+@@ -33,13 +33,13 @@ end of frame event), it will turn on its error LED.
+ 
+ #define LENGTH_PACKET   125+LENGTH_CRC  ///< maximum length is 127 bytes
+ #define LEN_PKT_TO_SEND 20+LENGTH_CRC
+-#define CHANNEL         11             ///< 11=2.405GHz
++#define CHANNEL         13             ///< 11=2.405GHz
+ #define TIMER_PERIOD    (0xffff>>4)    ///< 0xffff = 2s@32kHz
+ #define ID              0x55           ///< byte sent in the packets
+-#define track_flag      0x01           ///< 0x01 for host 0x00 for slave
++#define track_flag      0x00           ///< 0x01 for host 0x00 for slave
+ #define BUFFER_SIZE     0x08   //2B*3 axises value + 2B ending with '\r\n'
+ 
+-uint8_t stringToSend[]  = "+002 Ptest.24\n";
++uint8_t stringToSend[]  = "+002 Pt\n";
+ 
+ //=========================== variables =======================================
+ 
+@@ -137,12 +137,15 @@ int mote_main(void) {
+     //  app_vars.who_am_i = bmx388_who_am_i();
+     //}
+ 
+-    // set bmx160
+-    // alway set address first
+-    i2c_set_addr(BMX160_ADDR);
++    
++    if(track_flag){
++      // set bmx160
++      // alway set address first
++      i2c_set_addr(BMX160_ADDR);
+ 
+-    // should be 0x50 for bmx388
+-    app_vars.who_am_i = bmx160_who_am_i();
++      // should be 0x50 for bmx388
++      app_vars.who_am_i = bmx160_who_am_i();
++    }
+ 
+ 
+     // add callback functions radio
+@@ -342,7 +345,7 @@ int mote_main(void) {
+                         memcpy(&stringToSend[i],&app_vars.packet[5],8);
+                         }
+ 
+-                        stringToSend[sizeof(stringToSend)-2] = '\r';
++                        //stringToSend[sizeof(stringToSend)-2] = '\r';
+                         stringToSend[sizeof(stringToSend)-1] = '\n';
+ 
+                         //j ++;
+diff --git a/projects/nrf52840_dk/nrf52840_dk.emSession b/projects/nrf52840_dk/nrf52840_dk.emSession
+index 9235f057..bf58115a 100644
+--- a/projects/nrf52840_dk/nrf52840_dk.emSession
++++ b/projects/nrf52840_dk/nrf52840_dk.emSession
+@@ -2,103 +2,86 @@
+ <session>
+  <Bookmarks/>
+  <Breakpoints groups="Breakpoints" active_group="Breakpoints">
+-  <BreakpointListItem trigger="" line="88" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common/01bsp_bmx388/01bsp_bmx388.c" useHWbreakpoint="false"/>
+-  <BreakpointListItem trigger="" line="155" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../common/01bsp_radio/01bsp_radio.c" useHWbreakpoint="false"/>
+-  <BreakpointListItem trigger="" line="275" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../common/01bsp_radio/01bsp_radio.c" useHWbreakpoint="false"/>
+-  <BreakpointListItem trigger="" line="286" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../common/01bsp_radio/01bsp_radio.c" useHWbreakpoint="false"/>
+   <BreakpointListItem trigger="" line="48" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common/01bsp_sctimer/01bsp_sctimer.c" useHWbreakpoint="false"/>
+-  <BreakpointListItem trigger="" line="192" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../../bsp/chips/bmx388/bmx388.c" useHWbreakpoint="false"/>
++  <BreakpointListItem trigger="" line="113" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common/01bsp_uart/01bsp_uart.c" useHWbreakpoint="false"/>
++  <BreakpointListItem trigger="" line="137" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common/01bsp_uart/01bsp_uart.c" useHWbreakpoint="false"/>
+  </Breakpoints>
+  <ExecutionProfileWindow/>
+  <FrameBuffer>
+   <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_leds_Debug" addressText="" accessByDisplayWidth="0"/>
+   <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_sctimer_Debug" addressText="" accessByDisplayWidth="0"/>
+   <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_uart_Debug" addressText="" accessByDisplayWidth="0"/>
+-  <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_bmx160_Debug" addressText="" accessByDisplayWidth="0"/>
+   <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_i2c_Debug" addressText="" accessByDisplayWidth="0"/>
+-  <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_bmx388_Debug" addressText="" accessByDisplayWidth="0"/>
+-  <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_radio_Debug" addressText="" accessByDisplayWidth="0"/>
++  <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_bmx160_Debug" addressText="" accessByDisplayWidth="0"/>
+  </FrameBuffer>
+  <Memory1>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_i2c_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx388_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_radio_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+  </Memory1>
+  <Memory2>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_i2c_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx388_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_radio_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+  </Memory2>
+  <Memory3>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_i2c_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx388_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_radio_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+  </Memory3>
+  <Memory4>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_i2c_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx388_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_radio_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+  </Memory4>
+  <Project>
+   <ProjectSessionItem path="nrf52840-dk"/>
+-  <ProjectSessionItem path="nrf52840-dk;01bsp_eui64"/>
+-  <ProjectSessionItem path="nrf52840-dk;01bsp_eui64;application"/>
+-  <ProjectSessionItem path="nrf52840-dk;01bsp_radio"/>
+-  <ProjectSessionItem path="nrf52840-dk;01bsp_radio;application"/>
+-  <ProjectSessionItem path="nrf52840-dk;01bsp_radio;bsp"/>
+-  <ProjectSessionItem path="nrf52840-dk;Copy of 01bsp_radio"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_bmx160"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_bmx160;application"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_bmx160;bsp"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_i2c"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_i2c;application"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;application"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;bsp"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;bsp;sdk"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;inc"/>
+  </Project>
+  <Register1>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_i2c_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx388_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_radio_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register1>
+  <Register2>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_i2c_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx388_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_radio_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register2>
+  <Register3>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_i2c_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx388_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_radio_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register3>
+  <Register4>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_i2c_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx388_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_radio_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register4>
+  <Threads>
+   <ThreadsWindow showLists=""/>
+@@ -110,11 +93,13 @@
+   <Watches active="1" update="Never">
+    <Watchpoint expression="counter_current" name="counter_current" radix="16" linenumber="149" filename="../common/01bsp_leds/01bsp_leds.c"/>
+    <Watchpoint expression="timerflag" name="timerflag" radix="-1" linenumber="63" filename="../common/01bsp_leds/01bsp_leds.c"/>
+-   <Watchpoint expression="app_vars" name="app_vars" radix="-1" linenumber="43" filename="../common/01bsp_i2c/01bsp_i2c.c"/>
+-   <Watchpoint expression="stasus" name="stasus" radix="-1" linenumber="101" filename="../common/01bsp_bmx388/01bsp_bmx388.c"/>
+-   <Watchpoint expression="bmx388x_var" name="bmx388x_var" radix="-1" linenumber="143" filename="../../bsp/chips/bmx388/bmx388.c"/>
+-   <Watchpoint expression="pwr_status" name="pwr_status" radix="-1" linenumber="82" filename="../common/01bsp_bmx388/01bsp_bmx388.c"/>
+-   <Watchpoint expression="stringToSend" name="stringToSend" radix="-1" linenumber="238" filename="../common/01bsp_radio/01bsp_radio.c"/>
++   <Watchpoint expression="byte" name="byte" radix="16" linenumber="139" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="uart_lastRxByteIndex" name="uart_lastRxByteIndex" radix="16" linenumber="137" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="stringToReceive" name="stringToReceive" radix="-1" linenumber="136" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="echoStartFlag" name="echoStartFlag" radix="16" linenumber="139" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="app_vars" name="app_vars" radix="-1" linenumber="42" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="i" name="i" radix="-1" linenumber="113" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="who_am_i" name="who_am_i" radix="16" linenumber="26" filename="../common/01bsp_i2c/01bsp_i2c.c"/>
+   </Watches>
+  </Watch1>
+  <Watch2>
+@@ -127,10 +112,8 @@
+   <Watches active="0" update="Never"/>
+  </Watch4>
+  <Files>
+-  <SessionOpenFile windowGroup="DockEditLeft" x="40" y="40" useTextEdit="1" path="../common/01bsp_radio/01bsp_radio.c" left="0" selected="1" top="91" codecName="Default"/>
+-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="29" useTextEdit="1" path="../../bsp/boards/nrf52840_dk/board.c" left="0" top="48" codecName="Default"/>
+-  <SessionOpenFile windowGroup="DockEditLeft" x="3" y="31" useTextEdit="1" openedFrom="D:/OneDrive - HKUST (Guangzhou)/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/bsp/boards/nrf52840_dk/radio.c" path="../../bsp/boards/radio.h" left="0" top="31" codecName="Default"/>
+-  <SessionOpenFile windowGroup="DockEditLeft" x="27" y="489" useTextEdit="1" openedFrom="D:/OneDrive - HKUST (Guangzhou)/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/common/01bsp_radio/01bsp_radio.c" path="../../bsp/boards/nrf52840_dk/radio.c" left="0" top="466" codecName="Default"/>
++  <SessionOpenFile windowGroup="DockEditLeft" x="23" y="23" useTextEdit="1" path="../../bsp/boards/nrf52840_dk/board.c" left="0" selected="1" top="0" codecName="Default"/>
++  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="108" useTextEdit="1" path="../../bsp/boards/nrf52840_dk/i2c.c" left="0" top="91" codecName="Default"/>
+  </Files>
+- <EMStudioWindow activeProject="01bsp_radio" fileDialogDefaultFilter="*.emProject" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/nrf52840_dk" debugSearchPath="" autoConnectCapabilities="3711"/>
++ <EMStudioWindow activeProject="01bsp_bmx160" fileDialogDefaultFilter="*.emProject" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/nrf52840_dk" debugSearchPath="" autoConnectCapabilities="3199"/>
+ </session>
+diff --git a/projects/common/01bsp_radio/01bsp_radio.c b/projects/common/01bsp_radio/01bsp_radio.c
+index db2d7fd4..62105148 100644
+--- a/projects/common/01bsp_radio/01bsp_radio.c
++++ b/projects/common/01bsp_radio/01bsp_radio.c
+@@ -25,7 +25,7 @@ end of frame event), it will turn on its error LED.
+ #include "i2c.h"
+ #include "stdint.h"
+ #include "string.h"
+-#include "bmx388.h"
++#include "bmx160.h"
+ #include "stdio.h"
+ #include "math.h"
+ 
+@@ -33,12 +33,13 @@ end of frame event), it will turn on its error LED.
+ 
+ #define LENGTH_PACKET   125+LENGTH_CRC  ///< maximum length is 127 bytes
+ #define LEN_PKT_TO_SEND 20+LENGTH_CRC
+-#define CHANNEL         11             ///< 11=2.405GHz
++#define CHANNEL         13             ///< 11=2.405GHz
+ #define TIMER_PERIOD    (0xffff>>4)    ///< 0xffff = 2s@32kHz
+ #define ID              0x55           ///< byte sent in the packets
+ #define track_flag      0x00           ///< 0x01 for host 0x00 for slave
++#define BUFFER_SIZE     0x08   //2B*3 axises value + 2B ending with '\r\n'
+ 
+-uint8_t stringToSend[]  = "+002 Ptest.24\n";
++uint8_t stringToSend[]  = "+002 Pt\n";
+ 
+ //=========================== variables =======================================
+ 
+@@ -65,9 +66,10 @@ typedef struct {
+ app_dbg_t app_dbg;
+ 
+ typedef struct {
++                uint8_t         uart_lastTxByteIndex;
+     volatile    uint8_t         uartDone;
+     volatile    uint8_t         uartSendNow;
+-                uint8_t         uart_lastTxByteIndex;
++    volatile   uint8_t uartToSend[BUFFER_SIZE];
+ 
+                 uint8_t         flags;
+                 app_state_t     state;
+@@ -80,6 +82,13 @@ typedef struct {
+                 uint8_t who_am_i;
+                 float   temp_f;
+                 char    temp_data[6];
++
++                uint16_t num_compare;
++                bool sampling_now;
++                uint8_t axes[6];
++                float axis_x;
++                float axis_y;
++                float axis_z;
+ } app_vars_t;
+ 
+ app_vars_t app_vars;
+@@ -118,15 +127,27 @@ int mote_main(void) {
+ 
+     app_vars.uartDone = 1;
+ 
++    //// set bmx388
++    //if(track_flag){
++    //  // alway set address first
++    //  i2c_set_addr(BMX388_ADDR);
++    //  bmx160_power_on();
++
++    //  // should be 0x50 for bmx388
++    //  app_vars.who_am_i = bmx388_who_am_i();
++    //}
++
++    
+     if(track_flag){
++      // set bmx160
+       // alway set address first
+-      i2c_set_addr(BMX388_ADDR);
+-      bmx160_power_on();
++      i2c_set_addr(BMX160_ADDR);
+ 
+       // should be 0x50 for bmx388
+-      app_vars.who_am_i = bmx388_who_am_i();
++      app_vars.who_am_i = bmx160_who_am_i();
+     }
+ 
++
+     // add callback functions radio
+     radio_setStartFrameCb(cb_startFrame);
+     radio_setEndFrameCb(cb_endFrame);
+@@ -161,14 +182,34 @@ int mote_main(void) {
+             board_sleep();
+         }
+ 
+-        if(track_flag){
+-          //read bmx388 data
+-          bmx160_read_9dof_data();
+-          bmp388_get_compensation();
+-          bmp388_compensation_temp();
+-          app_vars.temp_f = bmx388_read_t_fine();
+-          float_to_char(app_vars.temp_f,app_vars.temp_data,4);
+-        }
++        //if(track_flag){
++        //  //read bmx388 data
++        //  bmx160_read_9dof_data();
++        //  bmp388_get_compensation();
++        //  bmp388_compensation_temp();
++        //  app_vars.temp_f = bmx388_read_t_fine();
++        //  float_to_char(app_vars.temp_f,app_vars.temp_data,4);
++        //}
++        //if(track_flag){
++          
++        //  //int16_t tmp;
++        //  //i=0;
++        //  //tmp = bmx160_read_gyr_x();
++        //  //app_vars.uartToSend[i++] = (uint8_t)((tmp>>8) & 0x00ff);
++        //  //app_vars.uartToSend[i++] = (uint8_t)((tmp>>0) & 0x00ff);
++        
++        //  //tmp = bmx160_read_gyr_y();
++        //  //app_vars.uartToSend[i++] = (uint8_t)((tmp>>8) & 0x00ff);
++        //  //app_vars.uartToSend[i++] = (uint8_t)((tmp>>0) & 0x00ff);
++
++        //  //tmp = bmx160_read_gyr_z();
++        //  //app_vars.uartToSend[i++] = (uint8_t)((tmp>>8) & 0x00ff);
++        //  //app_vars.uartToSend[i++] = (uint8_t)((tmp>>0) & 0x00ff);
++
++        //  //app_vars.uartToSend[i++] = '\r';
++        //  //app_vars.uartToSend[i++] = '\n';
++        //  }
++
+ 
+ 
+         // handle and clear every flag
+@@ -229,7 +270,7 @@ int mote_main(void) {
+                             read = freq_offset;
+                         }
+ 
+-                        i = 0;
++                        //i = 0;
+                         //if (sign) {
+                         //    stringToSend[i++] = '-';
+                         //} else {
+@@ -272,37 +313,43 @@ int mote_main(void) {
+                         //stringToSend[i++] = '0'+read/10;
+                         //stringToSend[i++] = '0'+read%10;
+ 
+-                        stringToSend[i++] = '0'+((uint8_t)LEN_PKT_TO_SEND)/10;
+-                        stringToSend[i++] = '0'+((uint8_t)LEN_PKT_TO_SEND)%10;
+-                        stringToSend[i++] = ' ';
+-                        stringToSend[i++] = '0'+j/100;
+-                        stringToSend[i++] = '0'+(j%100-j%10)/10;
+-                        stringToSend[i++] = '0'+j%10;
+-                        stringToSend[i++] = ' ';
+-                        stringToSend[i++] = '0'+app_vars.rxpk_crc%10;
+-                        stringToSend[i++] = ' ';
+-
+-                        sign = (app_vars.rxpk_rssi & 0x80) >> 7;
+-                        if (sign){
+-                            read = 0xff - (uint8_t)(app_vars.rxpk_rssi) + 1;
+-                        } else {
+-                            read = app_vars.rxpk_rssi;
+-                        }
++                        //// send ssri
++                        //stringToSend[i++] = '0'+((uint8_t)LEN_PKT_TO_SEND)/10;
++                        //stringToSend[i++] = '0'+((uint8_t)LEN_PKT_TO_SEND)%10;
++                        //stringToSend[i++] = ' ';
++                        //stringToSend[i++] = '0'+j/100;
++                        //stringToSend[i++] = '0'+(j%100-j%10)/10;
++                        //stringToSend[i++] = '0'+j%10;
++                        //stringToSend[i++] = ' ';
++                        //stringToSend[i++] = '0'+app_vars.rxpk_crc%10;
++                        //stringToSend[i++] = ' ';
+ 
+-                        if (sign) {
+-                            stringToSend[i++] = '-';
+-                        } else {
+-                            stringToSend[i++] = '+';
++                        //sign = (app_vars.rxpk_rssi & 0x80) >> 7;
++                        //if (sign){
++                        //    read = 0xff - (uint8_t)(app_vars.rxpk_rssi) + 1;
++                        //} else {
++                        //    read = app_vars.rxpk_rssi;
++                        //}
++
++                        //if (sign) {
++                        //    stringToSend[i++] = '-';
++                        //} else {
++                        //    stringToSend[i++] = '+';
++                        //}
++                        //stringToSend[i++] = '0'+read/100;
++                        //stringToSend[i++] = '0'+read/10;
++                        //stringToSend[i++] = '0'+read%10;
++
++                        i = 0;
++                        if(track_flag==0x00){
++                        memcpy(&stringToSend[i],&app_vars.packet[5],8);
+                         }
+-                        stringToSend[i++] = '0'+read/100;
+-                        stringToSend[i++] = '0'+read/10;
+-                        stringToSend[i++] = '0'+read%10;
+ 
+-                        stringToSend[sizeof(stringToSend)-2] = '\r';
++                        //stringToSend[sizeof(stringToSend)-2] = '\r';
+                         stringToSend[sizeof(stringToSend)-1] = '\n';
+ 
+-                        j ++;
+-                        if(j>=255)  { j = 0;}
++                        //j ++;
++                        //if(j>=255)  { j = 0;}
+ 
+                         // send string over UART
+                         if (app_vars.uartDone == 1) {
+@@ -348,8 +395,22 @@ int mote_main(void) {
+                     app_vars.packet[i++] = 't';
+                     app_vars.packet[i++] = CHANNEL;
+                     if(track_flag){
+-                      memcpy(&app_vars.packet[i],&app_vars.temp_data[0],6);
+-                      i=i+6;
++                      uint8_t n = 0;
++                      int16_t tmp;
++                      bmx160_read_9dof_data();
++                      tmp = bmx160_read_gyr_x();
++                      app_vars.uartToSend[n++] = (uint8_t)((tmp>>8) & 0x00ff);
++                      app_vars.uartToSend[n++] = (uint8_t)((tmp>>0) & 0x00ff);
++        
++                      tmp = bmx160_read_gyr_y();
++                      app_vars.uartToSend[n++] = (uint8_t)((tmp>>8) & 0x00ff);
++                      app_vars.uartToSend[n++] = (uint8_t)((tmp>>0) & 0x00ff);
++
++                      tmp = bmx160_read_gyr_z();
++                      app_vars.uartToSend[n++] = (uint8_t)((tmp>>8) & 0x00ff);
++                      app_vars.uartToSend[n++] = (uint8_t)((tmp>>0) & 0x00ff);
++                      memcpy(&app_vars.packet[i],&app_vars.uartToSend[0],8);
++                      i=i+8;
+                     }
+ 
+                     while (i<app_vars.packet_len) {
+diff --git a/projects/nrf52840_dk/nrf52840_dk.emProject b/projects/nrf52840_dk/nrf52840_dk.emProject
+index 59b7bad5..2e882e9d 100644
+--- a/projects/nrf52840_dk/nrf52840_dk.emProject
++++ b/projects/nrf52840_dk/nrf52840_dk.emProject
+@@ -407,7 +407,7 @@
+     <configuration
+       Name="Debug"
+       c_include_files=""
+-      c_user_include_directories="../../bsp/chips/bmx388" />
++      c_user_include_directories="../../bsp/chips/bmx388;../../bsp/chips/bmx160" />
+     <folder
+       Name="application"
+       exclude=""
+@@ -424,7 +424,7 @@
+       Name="chip"
+       exclude=""
+       filter=""
+-      path="D:\Courses\HKUSTgz\23FALL\IOTA5109\openwsn-IOTA5109\bsp\chips\bmx388"
++      path="D:\Courses\HKUSTgz\23FALL\IOTA5109\openwsn-IOTA5109\bsp\chips\bmx160"
+       recurse="No" />
+     <folder
+       Name="inc"
+diff --git a/projects/nrf52840_dk/nrf52840_dk.emSession b/projects/nrf52840_dk/nrf52840_dk.emSession
+index 15e96516..bf58115a 100644
+--- a/projects/nrf52840_dk/nrf52840_dk.emSession
++++ b/projects/nrf52840_dk/nrf52840_dk.emSession
+@@ -2,104 +2,86 @@
+ <session>
+  <Bookmarks/>
+  <Breakpoints groups="Breakpoints" active_group="Breakpoints">
+-  <BreakpointListItem trigger="" line="88" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common/01bsp_bmx388/01bsp_bmx388.c" useHWbreakpoint="false"/>
+-  <BreakpointListItem trigger="" line="155" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../common/01bsp_radio/01bsp_radio.c" useHWbreakpoint="false"/>
+-  <BreakpointListItem trigger="" line="275" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../common/01bsp_radio/01bsp_radio.c" useHWbreakpoint="false"/>
+-  <BreakpointListItem trigger="" line="286" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../common/01bsp_radio/01bsp_radio.c" useHWbreakpoint="false"/>
+   <BreakpointListItem trigger="" line="48" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common/01bsp_sctimer/01bsp_sctimer.c" useHWbreakpoint="false"/>
+-  <BreakpointListItem trigger="" line="192" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../../bsp/chips/bmx388/bmx388.c" useHWbreakpoint="false"/>
+-  <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
++  <BreakpointListItem trigger="" line="113" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common/01bsp_uart/01bsp_uart.c" useHWbreakpoint="false"/>
++  <BreakpointListItem trigger="" line="137" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common/01bsp_uart/01bsp_uart.c" useHWbreakpoint="false"/>
+  </Breakpoints>
+  <ExecutionProfileWindow/>
+  <FrameBuffer>
+   <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_leds_Debug" addressText="" accessByDisplayWidth="0"/>
+   <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_sctimer_Debug" addressText="" accessByDisplayWidth="0"/>
+   <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_uart_Debug" addressText="" accessByDisplayWidth="0"/>
+-  <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_bmx160_Debug" addressText="" accessByDisplayWidth="0"/>
+   <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_i2c_Debug" addressText="" accessByDisplayWidth="0"/>
+-  <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_bmx388_Debug" addressText="" accessByDisplayWidth="0"/>
+-  <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_radio_Debug" addressText="" accessByDisplayWidth="0"/>
++  <FrameBufferWindow width="16843009" keepAspectRatio="0" zoomToFitWindow="0" addressSpace="" format="0" height="16843009" autoEvaluate="0" scaleFactor="1" refreshPeriod="0" name="01bsp_bmx160_Debug" addressText="" accessByDisplayWidth="0"/>
+  </FrameBuffer>
+  <Memory1>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_i2c_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx388_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_radio_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+  </Memory1>
+  <Memory2>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_i2c_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx388_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_radio_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+  </Memory2>
+  <Memory3>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_i2c_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx388_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_radio_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+  </Memory3>
+  <Memory4>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_leds_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_sctimer_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_uart_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_i2c_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx388_Debug" sizeText="" addressText=""/>
+-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_radio_Debug" sizeText="" addressText=""/>
++  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="01bsp_bmx160_Debug" sizeText="" addressText=""/>
+  </Memory4>
+  <Project>
+   <ProjectSessionItem path="nrf52840-dk"/>
+-  <ProjectSessionItem path="nrf52840-dk;01bsp_eui64"/>
+-  <ProjectSessionItem path="nrf52840-dk;01bsp_eui64;application"/>
+-  <ProjectSessionItem path="nrf52840-dk;01bsp_radio"/>
+-  <ProjectSessionItem path="nrf52840-dk;01bsp_radio;application"/>
+-  <ProjectSessionItem path="nrf52840-dk;01bsp_radio;bsp"/>
+-  <ProjectSessionItem path="nrf52840-dk;Copy of 01bsp_radio"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_bmx160"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_bmx160;application"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_bmx160;bsp"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_i2c"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_i2c;application"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;application"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;bsp"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;bsp;sdk"/>
++  <ProjectSessionItem path="nrf52840-dk;01bsp_uart;inc"/>
+  </Project>
+  <Register1>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_i2c_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx388_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_radio_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register1>
+  <Register2>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_i2c_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx388_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_radio_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register2>
+  <Register3>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_i2c_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx388_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_radio_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register3>
+  <Register4>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_leds_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_sctimer_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_uart_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_i2c_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx388_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+-  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_radio_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
++  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="01bsp_bmx160_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  </Register4>
+  <Threads>
+   <ThreadsWindow showLists=""/>
+@@ -111,11 +93,13 @@
+   <Watches active="1" update="Never">
+    <Watchpoint expression="counter_current" name="counter_current" radix="16" linenumber="149" filename="../common/01bsp_leds/01bsp_leds.c"/>
+    <Watchpoint expression="timerflag" name="timerflag" radix="-1" linenumber="63" filename="../common/01bsp_leds/01bsp_leds.c"/>
+-   <Watchpoint expression="app_vars" name="app_vars" radix="-1" linenumber="43" filename="../common/01bsp_i2c/01bsp_i2c.c"/>
+-   <Watchpoint expression="stasus" name="stasus" radix="-1" linenumber="101" filename="../common/01bsp_bmx388/01bsp_bmx388.c"/>
+-   <Watchpoint expression="bmx388x_var" name="bmx388x_var" radix="-1" linenumber="143" filename="../../bsp/chips/bmx388/bmx388.c"/>
+-   <Watchpoint expression="pwr_status" name="pwr_status" radix="-1" linenumber="82" filename="../common/01bsp_bmx388/01bsp_bmx388.c"/>
+-   <Watchpoint expression="stringToSend" name="stringToSend" radix="-1" linenumber="238" filename="../common/01bsp_radio/01bsp_radio.c"/>
++   <Watchpoint expression="byte" name="byte" radix="16" linenumber="139" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="uart_lastRxByteIndex" name="uart_lastRxByteIndex" radix="16" linenumber="137" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="stringToReceive" name="stringToReceive" radix="-1" linenumber="136" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="echoStartFlag" name="echoStartFlag" radix="16" linenumber="139" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="app_vars" name="app_vars" radix="-1" linenumber="42" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="i" name="i" radix="-1" linenumber="113" filename="../common/01bsp_uart/01bsp_uart.c"/>
++   <Watchpoint expression="who_am_i" name="who_am_i" radix="16" linenumber="26" filename="../common/01bsp_i2c/01bsp_i2c.c"/>
+   </Watches>
+  </Watch1>
+  <Watch2>
+@@ -128,10 +112,8 @@
+   <Watches active="0" update="Never"/>
+  </Watch4>
+  <Files>
+-  <SessionOpenFile windowGroup="DockEditLeft" x="48" y="282" useTextEdit="1" path="../common/01bsp_radio/01bsp_radio.c" left="0" top="213" codecName="Default"/>
+-  <SessionOpenFile windowGroup="DockEditLeft" x="20" y="15" useTextEdit="1" path="../../bsp/boards/nrf52840_dk/board.c" left="0" top="15" codecName="Default"/>
+-  <SessionOpenFile windowGroup="DockEditLeft" x="3" y="31" useTextEdit="1" openedFrom="D:/OneDrive - HKUST (Guangzhou)/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/bsp/boards/nrf52840_dk/radio.c" path="../../bsp/boards/radio.h" left="0" top="28" codecName="Default"/>
+-  <SessionOpenFile windowGroup="DockEditLeft" x="27" y="489" useTextEdit="1" openedFrom="D:/OneDrive - HKUST (Guangzhou)/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/common/01bsp_radio/01bsp_radio.c" path="../../bsp/boards/nrf52840_dk/radio.c" left="0" selected="1" top="466" codecName="Default"/>
++  <SessionOpenFile windowGroup="DockEditLeft" x="23" y="23" useTextEdit="1" path="../../bsp/boards/nrf52840_dk/board.c" left="0" selected="1" top="0" codecName="Default"/>
++  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="108" useTextEdit="1" path="../../bsp/boards/nrf52840_dk/i2c.c" left="0" top="91" codecName="Default"/>
+  </Files>
+- <EMStudioWindow activeProject="01bsp_radio" fileDialogDefaultFilter="*.emProject" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/nrf52840_dk" debugSearchPath="" autoConnectCapabilities="3199"/>
++ <EMStudioWindow activeProject="01bsp_bmx160" fileDialogDefaultFilter="*.emProject" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/nrf52840_dk" debugSearchPath="" autoConnectCapabilities="3199"/>
+ </session>
