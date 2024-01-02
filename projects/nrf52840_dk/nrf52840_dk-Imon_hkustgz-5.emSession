@@ -44,8 +44,8 @@
  </Memory4>
  <Project>
   <ProjectSessionItem path="nrf52840-dk"/>
-  <ProjectSessionItem path="nrf52840-dk;01bsp_leds"/>
-  <ProjectSessionItem path="nrf52840-dk;01bsp_leds;application"/>
+  <ProjectSessionItem path="nrf52840-dk;01bsp_radio"/>
+  <ProjectSessionItem path="nrf52840-dk;01bsp_radio;application"/>
   <ProjectSessionItem path="nrf52840-dk;03oos_openwsn"/>
   <ProjectSessionItem path="nrf52840-dk;03oos_openwsn;application"/>
   <ProjectSessionItem path="nrf52840-dk;03oos_openwsn;inc"/>
@@ -109,11 +109,11 @@
  <Files>
   <SessionOpenFile windowGroup="DockEditLeft" x="23" y="23" useTextEdit="1" path="../../bsp/boards/nrf52840_dk/board.c" left="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="108" useTextEdit="1" path="../../bsp/boards/nrf52840_dk/i2c.c" left="0" top="91" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="24" useTextEdit="1" path="../common/03oos_openwsn/03oos_openwsn.c" left="0" selected="1" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="38" y="396" useTextEdit="1" path="../../inc/config.h" left="0" top="375" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" path="../common/03oos_openwsn/03oos_openwsn.c" left="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="31" y="383" useTextEdit="1" path="../../inc/config.h" left="0" top="375" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" path="../../inc/opendefs.h" left="0" top="347" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" path="../../inc/check_config.h" left="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" path="../common/01bsp_leds/01bsp_leds.c" left="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" path="../common/01bsp_bmx388/01bsp_bmx388.c" left="0" selected="1" top="47" codecName="Default"/>
  </Files>
- <EMStudioWindow activeProject="03oos_openwsn" fileDialogDefaultFilter="*.emProject" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/nrf52840_dk" debugSearchPath="" autoConnectCapabilities="3711"/>
+ <EMStudioWindow activeProject="03oos_openwsn" fileDialogDefaultFilter="*.emProject" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/nrf52840_dk" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>
