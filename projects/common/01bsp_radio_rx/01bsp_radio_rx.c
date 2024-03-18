@@ -71,8 +71,8 @@ len=17  num=84  rssi=-81  lqi=108 crc=1
 //#include "sctimer.h"
 
 //=========================== defines =========================================
-
-#define LENGTH_PACKET        125+LENGTH_CRC // maximum length is 127 bytes
+#define LEN_WITHOUT_CRC 7
+#define LENGTH_PACKET        LEN_WITHOUT_CRC+LENGTH_CRC // maximum length is 127 bytes
 #define CHANNEL              11             // 24ghz: 11 = 2.405GHz, subghz: 11 = 865.325 in  FSK operating mode #1
 #define LENGTH_SERIAL_FRAME  127              // length of the serial frame
 
@@ -86,7 +86,7 @@ typedef struct {
 
 app_dbg_t app_dbg;
 
-char buffer[] = "00.00.00\r\n";
+char buffer[6] = "000\r\n";
 
 typedef struct {
     // rx packet
@@ -104,9 +104,9 @@ typedef struct {
     volatile    uint8_t    uart_done;
 } app_vars_t;
 
-uint16_t length = 0;
-
 app_vars_t app_vars;
+
+uint16_t length = 0;
 
 //=========================== prototypes ======================================
 
@@ -119,6 +119,7 @@ void cb_endFrame(PORT_TIMER_WIDTH timestamp);
 void cb_uartTxDone(void);
 uint8_t cb_uartRxCb(void);
 void send_string(const char* str);
+
 
 //=========================== main ============================================
 
@@ -142,8 +143,8 @@ int mote_main(void) {
     // setup UART
     uart_setCallbacks(cb_uartTxDone,cb_uartRxCb);
     uart_enableInterrupts();
-    length = strlen("uart is ok!");
-    send_string("uart is ok!");
+    length = strlen("uart is ok!\r\n");
+    send_string("uart is ok!\r\n");
 
 
     // prepare radio
@@ -171,12 +172,11 @@ int mote_main(void) {
 
         // led
         leds_error_on();
-        length = 9;
+        length = 8;
         send_string("setting: ");
-        length = 10;
+        length = 5;
         send_string(buffer);
-
-        //// format frame to send over serial port
+        // format frame to send over serial port
         //i = 0;
         //app_vars.uart_txFrame[i++] = app_vars.rxpk_len;  // packet length
         //app_vars.uart_txFrame[i++] = app_vars.rxpk_num;  // packet number
@@ -192,9 +192,13 @@ int mote_main(void) {
         //app_vars.uart_lastTxByte    = 0;
 
         //// send app_vars.uart_txFrame over UART
-        //uart_clearTxInterrupts();
-        //uart_clearRxInterrupts();
-        //uart_enableInterrupts();
+        ////uart_clearTxInterrupts();
+        ////uart_clearRxInterrupts();
+        ////uart_enableInterrupts();
+        //length = 9;
+        //app_vars.uart_txFrame[length] = 0;
+        //app_vars.uart_done = 0;
+        //app_vars.uart_lastTxByte = 0;
         //uart_writeByte(app_vars.uart_txFrame[app_vars.uart_lastTxByte]);
         //while (app_vars.uart_done==0); // busy wait to finish
         //uart_disableInterrupts();
@@ -242,20 +246,15 @@ void cb_endFrame(PORT_TIMER_WIDTH timestamp) {
     if (app_vars.rxpk_len>LENGTH_PACKET){
         expectedFrame = FALSE;
     } else {
-        //for(i=1;i<10;i++){
-        //    if(app_vars.rxpk_buf[i]!=i){
-        //        expectedFrame = FALSE;
-        //        break;
-        //    }
-        if(app_vars.rxpk_buf[0] != 'P')
+        uint8_t cksum = 0;
+	for(i = 0; i < LEN_WITHOUT_CRC; i++)
+            cksum += app_vars.rxpk_buf[i];
+        if(cksum != 0)
             expectedFrame = FALSE;
         else {
-            buffer[0] = app_vars.rxpk_buf[1];
-            buffer[1] = app_vars.rxpk_buf[2];
-            buffer[3] = app_vars.rxpk_buf[3];
-            buffer[4] = app_vars.rxpk_buf[4];
-            buffer[6] = app_vars.rxpk_buf[5];
-            buffer[7] = app_vars.rxpk_buf[6];
+            buffer[0] = app_vars.rxpk_buf[0];
+            buffer[1] = app_vars.rxpk_buf[1];
+            buffer[2] = app_vars.rxpk_buf[2];
         }
     }
 
@@ -293,7 +292,6 @@ void cb_uartTxDone(void) {
         app_vars.uart_done=1;
     }
 }
-
 //void cb_uartTxDone(void) {
 //   app_vars.uart_lastTxByte++;
 //   if (app_vars.uart_lastTxByte<length) {
@@ -302,7 +300,6 @@ void cb_uartTxDone(void) {
 //      app_vars.uart_done = 1;
 //   }
 //}
-
 uint8_t cb_uartRxCb(void) {
 
     //  uint8_t byte;
