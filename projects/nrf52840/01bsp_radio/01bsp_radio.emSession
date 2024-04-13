@@ -1,0 +1,45 @@
+<!DOCTYPE CrossStudio_Session_File>
+<session>
+ <Bookmarks/>
+ <Breakpoints groups="Breakpoints" active_group="Breakpoints"/>
+ <ExecutionProfileWindow/>
+ <FrameBuffer/>
+ <Memory1/>
+ <Memory2/>
+ <Memory3/>
+ <Memory4/>
+ <Project>
+  <ProjectSessionItem path="01bsp_radio"/>
+  <ProjectSessionItem path="01bsp_radio;01bsp_radio"/>
+  <ProjectSessionItem path="01bsp_radio;01bsp_radio;Application"/>
+  <ProjectSessionItem path="01bsp_radio;01bsp_radio;OpenWSN"/>
+  <ProjectSessionItem path="01bsp_radio;01bsp_radio;OpenWSN;bsp"/>
+ </Project>
+ <Register1/>
+ <Register2/>
+ <Register3/>
+ <Register4/>
+ <Threads>
+  <ThreadsWindow showLists=""/>
+ </Threads>
+ <TraceWindow>
+  <Trace enabled="Yes"/>
+ </TraceWindow>
+ <Watch1>
+  <Watches active="1" update="Never"/>
+ </Watch1>
+ <Watch2>
+  <Watches active="0" update="Never"/>
+ </Watch2>
+ <Watch3>
+  <Watches active="0" update="Never"/>
+ </Watch3>
+ <Watch4>
+  <Watches active="0" update="Never"/>
+ </Watch4>
+ <Files>
+  <SessionOpenFile windowGroup="DockEditLeft" x="35" y="27" useTextEdit="1" path="../../common/01bsp_radio/01bsp_radio.c" left="0" selected="1" top="27" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="20" y="18" useTextEdit="1" openedFrom="D:/OneDrive - HKUST (Guangzhou)/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/common/01bsp_radio/01bsp_radio.c" path="../../../bsp/boards/radio.h" left="0" top="0" codecName="Default"/>
+ </Files>
+ <EMStudioWindow activeProject="01bsp_radio" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="" debugSearchPath="" autoConnectCapabilities="3199"/>
+</session>
