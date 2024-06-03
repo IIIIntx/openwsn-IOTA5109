@@ -213,8 +213,23 @@ int mote_main(void) {
                             leds_debug_toggle();
                         }
 
-                        if (app_vars.packet[0] == 0x04) {
+                        if (app_vars.packet[2] == 0xCC
+                        ) {
                             leds_debug_toggle();
+                            //send_string("PACK1: ");
+                            m = 0;
+                            j = 5;
+                            stringToSend[m++] = '0' + app_vars.packet[j] / 10;
+                            stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
+                            stringToSend[m++] = '.';
+                            stringToSend[m++] = '0' + app_vars.packet[j] / 10;
+                            stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
+                            stringToSend[m++] = '.';
+                            stringToSend[m++] = '0' + app_vars.packet[j] / 10;
+                            stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
+                            stringToSend[m++] = '\r';
+                            stringToSend[m++] = '\n';
+                            send_string(stringToSend);
                         }
                         if (app_vars.packet_len <10) {
                             leds_debug_toggle();
