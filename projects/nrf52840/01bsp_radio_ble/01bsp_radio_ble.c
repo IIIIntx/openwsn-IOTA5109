@@ -34,7 +34,7 @@ end of frame event), it will turn on its error LED.
 
 
 #define LEN_PKT_TO_SEND 20+LENGTH_CRC
-char stringToSend[]  = "YYMYYMYYM\n";
+char stringToSend[]  = "YYMYYMYYM\r\n";
 uint16_t length = 0;
 
 const static uint8_t ble_device_addr[6] = { 
@@ -72,9 +72,9 @@ app_dbg_t app_dbg;
 
 typedef struct {
      // uart
-                uint8_t    uart_txFrame[LENGTH_SERIAL_FRAME];
-                uint8_t    uart_lastTxByte;
-    volatile    uint8_t    uart_done;
+                uint8_t         uart_txFrame[LENGTH_SERIAL_FRAME];
+                uint8_t         uart_lastTxByte;
+    volatile    uint8_t         uart_done;
 
                 uint8_t         flags;
                 app_state_t     state;
@@ -94,10 +94,9 @@ void     cb_endFrame(PORT_TIMER_WIDTH timestamp);
 void     cb_timer(void);
 
 // uart
-void cb_uartTxDone(void);
-uint8_t cb_uartRxCb(void);
-void send_string(const char* str);
-
+void     cb_uartTxDone(void);
+uint8_t  cb_uartRxCb(void);
+void     send_string(const char* str);
 
 void     assemble_ibeacon_packet(void);
 void     assemble_test_packet();
@@ -113,6 +112,8 @@ int mote_main(void) {
     uint8_t freq_offset;
     uint8_t sign;
     uint8_t read;
+    uint32_t receivedPKDTimes;
+    uint32_t receivedPKDTimesPre;
 
     // clear local variables
     memset(&app_vars,0,sizeof(app_vars_t));
@@ -153,150 +154,132 @@ int mote_main(void) {
     app_vars.flags |= APP_FLAG_TIMER;
 
     while (1) {
+      
+      // sleep while waiting for at least one of the flags to be set
+      while (app_vars.flags==0x00) {
+        board_sleep();
+      }
 
-        // sleep while waiting for at least one of the flags to be set
-        while (app_vars.flags==0x00) {
-            board_sleep();
-        }
-
-        // handle and clear every flag
-        while (app_vars.flags) {
-
-
-            //==== APP_FLAG_START_FRAME (TX or RX)
-
-            if (app_vars.flags & APP_FLAG_START_FRAME) {
-                // start of frame
-
-                switch (app_vars.state) {
-                    case APP_STATE_RX:
-                        // started receiving a packet
-
-                        // led
-                        leds_error_on();
-                        break;
-                    case APP_STATE_TX:
-                        // started sending a packet
-
-                        // led
-                        leds_sync_on();
+      // handle and clear every flag
+      while (app_vars.flags) {
+        //==== APP_FLAG_START_FRAME (TX or RX)
+          if (app_vars.flags & APP_FLAG_START_FRAME) {
+          // start of frame
+             switch (app_vars.state) {
+                 case APP_STATE_RX:
+                    // started receiving a packet
+                    // led
+                    leds_error_on();
                     break;
-                }
+                 case APP_STATE_TX:
+                    // started sending a packet
+                    // led
+                    leds_sync_on();
+                  break;
+              }
 
-                // clear flag
-                app_vars.flags &= ~APP_FLAG_START_FRAME;
-            }
+          // clear flag
+          app_vars.flags &= ~APP_FLAG_START_FRAME;
+          }
 
-            //==== APP_FLAG_END_FRAME (TX or RX)
+          //==== APP_FLAG_END_FRAME (TX or RX)
 
-            if (app_vars.flags & APP_FLAG_END_FRAME) {
-                // end of frame
+          if (app_vars.flags & APP_FLAG_END_FRAME) {
+          // end of frame
 
-                switch (app_vars.state) {
-
-                    case APP_STATE_RX:
-
-                        // done receiving a packet
-                        app_vars.packet_len = sizeof(app_vars.packet);
-
-                        // get packet from radio
-                        radio_ble_getReceivedFrame(
-                            app_vars.packet,
-                            &app_vars.packet_len,
-                            sizeof(app_vars.packet),
-                            &app_vars.rxpk_rssi,
-                            &app_vars.rxpk_lqi,
-                            &app_vars.rxpk_crc
-                        );
-
-                        if (app_vars.packet[0] == 0xAA) {
-                            leds_debug_toggle();
-                        }
-
-                        if (app_vars.packet[2] == 0xCC
+              switch (app_vars.state) {
+                  case APP_STATE_RX:
+                      // done receiving a packet
+                      app_vars.packet_len = sizeof(app_vars.packet);
+                      // get packet from radio
+                      radio_ble_getReceivedFrame(
+                          app_vars.packet,
+                          &app_vars.packet_len,
+                          sizeof(app_vars.packet),
+                          &app_vars.rxpk_rssi,
+                          &app_vars.rxpk_lqi,
+                          &app_vars.rxpk_crc
+                      );
+                      if (app_vars.packet[2] == 0xCC
                         ) {
                             leds_debug_toggle();
                             //send_string("PACK1: ");
-                            m = 0;
-                            j = 5;
-                            stringToSend[m++] = '0' + app_vars.packet[j] / 10;
-                            stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
-                            stringToSend[m++] = '.';
-                            stringToSend[m++] = '0' + app_vars.packet[j] / 10;
-                            stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
-                            stringToSend[m++] = '.';
-                            stringToSend[m++] = '0' + app_vars.packet[j] / 10;
-                            stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
-                            stringToSend[m++] = '\r';
-                            stringToSend[m++] = '\n';
-                            send_string(stringToSend);
+                            receivedPKDTimes ++;
+                            if(receivedPKDTimes == 1){
+                                m = 0;
+                                j = 5;
+                                stringToSend[m++] = '0' + app_vars.packet[j] / 10;
+                                stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
+                                stringToSend[m++] = '.';
+                                stringToSend[m++] = '0' + app_vars.packet[j] / 10;
+                                stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
+                                stringToSend[m++] = '.';
+                                stringToSend[m++] = '0' + app_vars.packet[j] / 10;
+                                stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
+                                stringToSend[m++] = '\r';
+                                stringToSend[m++] = '\n';
+                                send_string(stringToSend);
+                            }
                         }
-                        if (app_vars.packet_len <10) {
-                            leds_debug_toggle();
-                            m = 0;
-                            //stringToSend[m++] = 'P';
-                            //stringToSend[m++] = 'A';
-                            //stringToSend[m++] = 'C';
-                            //stringToSend[m++] = 'K';
-                            //stringToSend[m++] = ':';
-                            length = 5;
-                            send_string("PACK: ");
-                            //for(j = 0; j < app_vars.packet_len; ++j){
-                            //  //stringToSend[m++] = app_vars.packet[j];
-                            j = 2;
-                            stringToSend[m++] = '0' + app_vars.packet[j] / 10;
-                            stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
-                            stringToSend[m++] = '.';
-                            stringToSend[m++] = '0' + app_vars.packet[j] / 10;
-                            stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
-                            stringToSend[m++] = '.';
-                            stringToSend[m++] = '0' + app_vars.packet[j] / 10;
-                            stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
-                            stringToSend[m++] = '\r';
-                            stringToSend[m++] = '\n';
-                              //send_string(app_vars.packet[j]);
-                            //}
-                            length = 10;
-                            send_string(stringToSend);
-                            //stringToSend[m++] = '\r';
-                            //stringToSend[m++] = '\n';
-                            //send_string("\r\n");
-                        }
-
-                        //// send string over UART
-                        //if (app_vars.uartDone == 1) {
-                        //    app_vars.uartDone              = 0;
-                        //    app_vars.uart_lastTxByteIndex  = 0;
-                        //    uart_writeByte(stringToSend[app_vars.uart_lastTxByteIndex]);
+                      if(app_vars.packet[2] == 0xAB || app_vars.packet[3] == 0xAB || app_vars.packet[4] == 0xAB){
+                          if(receivedPKDTimes > receivedPKDTimesPre){
+                              receivedPKDTimesPre = receivedPKDTimes;
+                          }
+                          memset(stringToSend, 0x00, sizeof(stringToSend));
+                          m = 0;
+                          stringToSend[m++] = 'P';
+                          stringToSend[m++] = 'A';
+                          stringToSend[m++] = 'C';
+                          stringToSend[m++] = 'K';
+                          stringToSend[m++] = 'N';
+                          stringToSend[m++] = ':';
+                          stringToSend[m++] = '0' + receivedPKDTimes / 10;
+                          stringToSend[m++] = '0' + receivedPKDTimes % 10;
+                          stringToSend[m++] = '\r';
+                          stringToSend[m++] = '\n';
+                          send_string(stringToSend);
+                          receivedPKDTimes = 0;
+                      }
+                        //if (app_vars.packet_len <10) {
+                        //    leds_debug_toggle();
+                        //    m = 0;
+                        //    length = 5;
+                        //    send_string("PACK: ");
+                        //    j = 2;
+                        //    stringToSend[m++] = '0' + app_vars.packet[j] / 10;
+                        //    stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
+                        //    stringToSend[m++] = '.';
+                        //    stringToSend[m++] = '0' + app_vars.packet[j] / 10;
+                        //    stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
+                        //    stringToSend[m++] = '.';
+                        //    stringToSend[m++] = '0' + app_vars.packet[j] / 10;
+                        //    stringToSend[m++] = '0' + app_vars.packet[j++] % 10;
+                        //    stringToSend[m++] = '\r';
+                        //    stringToSend[m++] = '\n';
+                        //    length = 10;
+                        //    send_string(stringToSend);
                         //}
-
-
                         // led
                         leds_error_off();
-
                         // continue to listen
                         radio_rxNow();
                         break;
                     case APP_STATE_TX:
                         // done sending a packet
-
                         memset( app_vars.packet, 0x00, sizeof(app_vars.packet) );
-
                         // switch to RX mode
                         radio_rxEnable();
                         radio_rxNow();
                         app_vars.state = APP_STATE_RX;
-
                         // led
                         leds_sync_off();
-                        break;
+                    break;
                 }
                 // clear flag
                 app_vars.flags &= ~APP_FLAG_END_FRAME;
             }
 
             //==== APP_FLAG_TIMER
-
             if (app_vars.flags & APP_FLAG_TIMER) {
                 // timer fired
 
@@ -307,8 +290,8 @@ int mote_main(void) {
                     // prepare packet
                     app_vars.packet_len = sizeof(app_vars.packet);
                     
-                    assemble_ibeacon_packet();
-                    //assemble_test_packet();
+                    //assemble_ibeacon_packet();
+                    assemble_test_packet();
 
 
                     // start transmitting packet

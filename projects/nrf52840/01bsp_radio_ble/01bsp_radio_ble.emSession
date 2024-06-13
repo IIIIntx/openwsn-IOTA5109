@@ -62,12 +62,12 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="32" y="40" useTextEdit="1" path="01bsp_radio_ble.c" left="0" top="18" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="25" y="29" useTextEdit="1" path="01bsp_radio_ble.c" left="0" selected="1" top="21" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="46" useTextEdit="1" path="../../../bsp/boards/nrf52840/board.c" left="0" top="24" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="396" useTextEdit="1" path="../../../bsp/boards/nrf52840/sdk/components/toolchain/cmsis/include/cmsis_gcc.h" left="0" top="374" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="7" y="383" useTextEdit="1" openedFrom="D:/OneDrive - HKUST (Guangzhou)/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/nrf52840/01bsp_radio_ble/01bsp_radio_ble.c" path="../../../bsp/boards/nrf52840/radio.c" left="0" top="343" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="75" y="30" useTextEdit="1" openedFrom="D:/OneDrive - HKUST (Guangzhou)/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/bsp/boards/nrf52840/radio.c" path="../../../bsp/boards/radio.h" left="0" top="14" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="30" y="10789" useTextEdit="1" openedFrom="D:/OneDrive - HKUST (Guangzhou)/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/bsp/boards/nrf52840/radio.c" path="../../../bsp/boards/nrf52840/sdk/modules/nrfx/mdk/nrf52840_bitfields.h" left="0" top="10769" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="44" y="10785" useTextEdit="1" openedFrom="D:/OneDrive - HKUST (Guangzhou)/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/bsp/boards/nrf52840/radio.c" path="../../../bsp/boards/nrf52840/sdk/modules/nrfx/mdk/nrf52840_bitfields.h" left="0" top="10769" codecName="Default"/>
  </Files>
- <EMStudioWindow activeProject="01bsp_radio_ble" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="" debugSearchPath="" autoConnectCapabilities="3199"/>
+ <EMStudioWindow activeProject="01bsp_radio_ble" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>
