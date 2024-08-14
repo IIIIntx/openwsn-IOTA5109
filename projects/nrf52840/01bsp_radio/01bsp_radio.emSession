@@ -3,7 +3,9 @@
  <Bookmarks/>
  <Breakpoints groups="Breakpoints" active_group="Breakpoints"/>
  <ExecutionProfileWindow/>
- <FrameBuffer/>
+ <FrameBufferWindow>
+  <FrameBufferWindow bufferHeight="-1" addressSpace="" addressText="" bufferWidth="-1"/>
+ </FrameBufferWindow>
  <Memory1/>
  <Memory2/>
  <Memory3/>
@@ -38,8 +40,8 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="35" y="27" useTextEdit="1" path="../../common/01bsp_radio/01bsp_radio.c" left="0" selected="1" top="27" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="20" y="18" useTextEdit="1" openedFrom="D:/OneDrive - HKUST (Guangzhou)/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/common/01bsp_radio/01bsp_radio.c" path="../../../bsp/boards/radio.h" left="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="30" y="249" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/01bsp_radio/01bsp_radio.c" selected="1" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="20" y="18" useTextEdit="1" openedFrom="D:/OneDrive - HKUST (Guangzhou)/Courses/HKUSTgz/23FALL/IOTA5109/openwsn-IOTA5109/projects/common/01bsp_radio/01bsp_radio.c" useBinaryEdit="0" left="0" path="../../../bsp/boards/radio.h" selected="0" top="0" codecName="Default"/>
  </Files>
- <EMStudioWindow activeProject="01bsp_radio" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="" debugSearchPath="" autoConnectCapabilities="3199"/>
+ <ARMCrossStudioWindow activeProject="01bsp_radio" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>
