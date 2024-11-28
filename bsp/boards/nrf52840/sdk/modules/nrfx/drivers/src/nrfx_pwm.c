@@ -40,6 +40,13 @@
 
 #include <nrfx.h>
 
+//define the PWM enable
+#define NRFX_PWM_ENABLED 1
+#define NRFX_PWM0_ENABLED 1
+#define NRFX_PWM1_ENABLED 1
+#define NRFX_PWM2_ENABLED 1
+#define NRFX_PWM3_ENABLED 1
+
 #if NRFX_CHECK(NRFX_PWM_ENABLED)
 
 #if !(NRFX_CHECK(NRFX_PWM0_ENABLED) || NRFX_CHECK(NRFX_PWM1_ENABLED) || \
