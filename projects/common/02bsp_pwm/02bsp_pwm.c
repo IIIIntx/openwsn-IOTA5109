@@ -17,10 +17,19 @@ Load this program on your boards. The LEDs should start blinking furiously.
 #include "leds.h"
 #include "nrfx_pwm.h"
 #include "boards.h"
+#include "nrf_gpio.h"
+
+#define PIN_NUM_P0_08  NRF_GPIO_PIN_MAP(0,04)
 
 void some_delay(void);
 
 nrfx_pwm_t m_pwm0 = NRFX_PWM_INSTANCE(0);
+
+void init_gpio(void)
+{
+  nrf_gpio_cfg_output(PIN_NUM_P0_08);
+}
+
 
 // Function for initializing the PWM
 void init_pwm(void)
@@ -34,7 +43,7 @@ void init_pwm(void)
     //pwm_config.output_pins[1] = LED_2; // Connect LED_2 on the nRF52840 DK to PWM Channel 1
     pwm_config.output_pins[2] = 3; // Connect LED_3 on the nRF52840 DK to PWM Channel 2
     //pwm_config.output_pins[3] = LED_4; // Connect LED_4 on the nRF52840 DK to PWM Channel 3
-    pwm_config.top_value    = 31000; // Make PWM count from 0 - 100
+    pwm_config.top_value    = 20000; // Make PWM count from 0 - 100
     pwm_config.load_mode    = NRF_PWM_LOAD_INDIVIDUAL; // Use individual duty cycle for each PWM channel
     
     // Pass config structure into driver init() function 
@@ -46,7 +55,7 @@ static nrf_pwm_values_individual_t pwm_duty_cycle_values =
 {
     .channel_0 = 19000, //< Duty cycle value for channel 0.
     .channel_1 = 3000, //< Duty cycle value for channel 1.
-    .channel_2 = 10000, //< Duty cycle value for channel 2.
+    .channel_2 = 20000, //< Duty cycle value for channel 2.
     .channel_3 = 20000  //< Duty cycle value for channel 3.
 };
 
@@ -66,11 +75,17 @@ int mote_main(void) {uint8_t i;
    board_init();
    init_pwm();
    nrfx_pwm_simple_playback(&m_pwm0, &pwm_sequence, 1, NRFX_PWM_FLAG_LOOP);
-   
+   //init_gpio();
+   //for(;;){
+   //  nrf_gpio_pin_toggle(PIN_NUM_P0_08);
+   //  leds_error_toggle();
+   //  some_delay();
+   //  }
+
    return 0;
 }
 
 void some_delay(void) {
-   volatile uint16_t delay;
-   for (delay=0xffff;delay>0;delay--);
+   volatile uint32_t delay;
+   for (delay=0x000fffff;delay>0;delay--);
 }
